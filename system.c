@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 char *file_name_generator(const char *name)
 {
@@ -39,6 +40,32 @@ int file_exists(const char *filename)
     }
 }
 
+float calculate_ticket_price(int totalSeats, float totalRevenue, int seatLevel) {
+    float rootPrice = totalRevenue / totalSeats;
+    int priceFactor = 1 << seatLevel; // Calculate price factor using bitwise left shift operator
+
+    float ticketPrice = rootPrice * priceFactor;
+    if (ticketPrice < 1.0) {
+        ticketPrice = 1.0;
+    }
+
+    return ticketPrice;
+}
+
+
+void generate_tickets(size_t capacity, float revenue, FILE *artist)
+{
+    float sum = 0;
+    int rows = (int)(log2(capacity) + 1);
+    int seats_in_row = 1;
+
+    for(size_t i = 1; i <= rows; i++, seats_in_row *= 2) {
+        fprintf(artist, "Row %zu: - %.2f\n", i, calculate_ticket_price(capacity, revenue, i));
+        sum += calculate_ticket_price(capacity, revenue, i) * seats_in_row;
+    }
+    fprintf(artist, "Total: %.2f\n", sum);
+}
+
 int create_concert(size_t capacity, float revenue,
     const char *artist_name, const char *date, const char *location, char state)
 {
@@ -55,6 +82,7 @@ int create_concert(size_t capacity, float revenue,
     }
 
     artist = fopen(file_name, "a");
+
     if (artist == NULL) {
         printf("Error opening file.\n");
         free(file_name);
@@ -72,16 +100,54 @@ int create_concert(size_t capacity, float revenue,
     fprintf(artist, "Capacity: %zu\n", capacity);
     fprintf(artist, "Revenue: %.2f\n", revenue);
     fprintf(artist, "State: %c\n", state);
+    fprintf(artist, "Bought tickets: 0\n");
     fprintf(artist, "\n");
+
+    generate_tickets(capacity, revenue, artist); // doesnt currently work :)
+    fprintf(artist, "\n");
+
+    for(size_t i = 1; i <= capacity; i++) {
+        fprintf(artist, "%zu - 0\n", i);
+    }
 
     free(file_name);
     fclose(artist);
     return 0;
 }
 
+int make_concert_public(const char *artist_name, const char *date) {
+    char *file_name = file_name_generator(artist_name);
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char line[100];
+    char concert_date[11];
+
+    while (fgets(line, sizeof(line), artist)) {
+        if (sscanf(line, "Date: %10s", concert_date) == 1) {
+            if (strcmp(concert_date, date) == 0) {
+                fseek(artist, -2, SEEK_CUR);
+                fprintf(artist, "1\n");
+                fclose(artist);
+                free(file_name);
+                return 1;
+            }
+        }
+    }
+    return -1;
+}
+
 int main()
 {
-    create_concert(1000, 100000.0, "Lili Ivanova", "01.01.2020", "Sofia", '0');
-    create_concert(1002, 200000.0, "Lili Ivanova", "02.02.2020", "Sofia", '0');
+    create_concert(15, 100000.0, "Lili Ivanova", "01.01.2020", "Sofia", '0');
+    make_concert_public("Lili Ivanova", "01.01.2020");
+
     return 0;
 }

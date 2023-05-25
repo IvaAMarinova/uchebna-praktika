@@ -1,6 +1,13 @@
 size_t capacity - колко хора побира залата
 float revenue - колко иска да спечели артиста от участието
 char *artist_name - име на артиста
-char *date - дата на участието
+char *date - дата на участието - артиста вече има ли такива
 char *location - локация на участието
 char state - 0 ако не е активно, 1 ако е активно
+
+seat -> 0 - ne e zaeto, 1 - zaeto e
+
+kompilirai s -lm nakraq
+
+1  - ako funkciqta e uspqla
+-1 - ako funkciqta ne e uspqla
