@@ -149,25 +149,24 @@ int make_concert_public(const char *artist_name, const char *date) {
     char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
     strcpy(date_formated, "Date: ");
     strcat(date_formated, date);
-    char line[100];
-    char concert_date[11];
 
-    int in_concert = 0, count = 0;
+
+    char line[100];
     while (fgets(line, sizeof(line), artist)) {
-        if (in_concert != 0) {
-            count++;
-        }
-        if (count == 3) {
-            fseek(artist, -2, SEEK_CUR);
-            fprintf(artist, "1");
-            fclose(artist);
-            free(date_formated);
-            free(file_name);
-            return 1;
-        }
         if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
-            in_concert = 1;
-            count = 0; 
+            int counter = 0;
+            while (fgets(line, sizeof(line), artist)) {
+                counter++;
+                if(counter == 3)
+                {
+                    fseek(artist, -2, SEEK_CUR);
+                    fprintf(artist, "1");
+                    fclose(artist);
+                    free(date_formated);
+                    free(file_name);
+                    return 1;
+                }
+            }
         }
     }
 
