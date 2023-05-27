@@ -40,30 +40,47 @@ int file_exists(const char *filename)
     }
 }
 
-float calculate_ticket_price(int totalSeats, float totalRevenue, int seatLevel) {
-    float rootPrice = totalRevenue / totalSeats;
-    int priceFactor = 1 << seatLevel; // Calculate price factor using bitwise left shift operator
-
-    float ticketPrice = rootPrice * priceFactor;
-    if (ticketPrice < 1.0) {
-        ticketPrice = 1.0;
-    }
-
-    return ticketPrice;
-}
-
-
 void generate_tickets(size_t capacity, float revenue, FILE *artist)
 {
-    float sum = 0;
     int rows = (int)(log2(capacity) + 1);
-    int seats_in_row = 1;
+    float seat_prices[rows];
+    float seat = 0, prev_seat = 0, sum = 0;
+    size_t middle_seat_index = rows / 2;
 
-    for(size_t i = 1; i <= rows; i++, seats_in_row *= 2) {
-        fprintf(artist, "Row %zu: - %.2f\n", i, calculate_ticket_price(capacity, revenue, i));
-        sum += calculate_ticket_price(capacity, revenue, i) * seats_in_row;
+    // set the prices of the last row as the minimum
+    // price we can possibly give a seat and still hit revenue
+
+    // we set the seat as the middle seat
+    seat = revenue / capacity;
+    seat_prices[middle_seat_index] = seat;
+
+    prev_seat = seat;
+    sum = seat;
+    
+    // we go from middle seat to root seat
+    for (int i = middle_seat_index - 1; i >= 0; i--) {
+        seat = prev_seat * (1 + 0.01 * ((float)rows - i) * 2); 
+        sum += seat * pow(2, i);
+        seat_prices[i] = seat;
+        prev_seat = seat;
     }
-    fprintf(artist, "Total: %.2f\n", sum);
+
+    // we go from middle seat to last seat
+    prev_seat = seat_prices[middle_seat_index];
+    for (int i = middle_seat_index + 1; i < rows; i++) {
+        seat = prev_seat * (1 - 0.01 * ((float)rows - i) / 2); 
+        sum += seat * pow(2, i);
+        seat_prices[i] = seat;
+        prev_seat = seat;
+    }
+
+    for (int i = 0; i < rows; i++)
+    {
+        fprintf(artist, "Row %d: %0.01f\n", i + 1, seat_prices[i]);
+    }
+
+    fprintf(artist, "Sum: %0.01f\n", sum);
+    fprintf(artist, "\n");
 }
 
 int create_concert(size_t capacity, float revenue,
@@ -103,12 +120,15 @@ int create_concert(size_t capacity, float revenue,
     fprintf(artist, "Bought tickets: 0\n");
     fprintf(artist, "\n");
 
-    generate_tickets(capacity, revenue, artist); // doesnt currently work :)
+    generate_tickets(capacity, revenue, artist);
+    
     fprintf(artist, "\n");
 
     for(size_t i = 1; i <= capacity; i++) {
         fprintf(artist, "%zu - 0\n", i);
     }
+
+    fprintf(artist, "////////////////////////////\n"); // marks end of concert
 
     free(file_name);
     fclose(artist);
@@ -144,10 +164,97 @@ int make_concert_public(const char *artist_name, const char *date) {
     return -1;
 }
 
+int delete_concert(const char *artist_name, const char *date) {
+    char *file_name = file_name_generator(artist_name);
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char line[100];
+    char concert_date[11];
+    long int delete_start = -1;
+    long int delete_end = -1;
+    long int line_start = 0;
+    long int line_end = 0;
+    long int truncate_pos = 0;
+    int found_end_line = 0;
+
+    while (fgets(line, sizeof(line), artist)) {
+        line_end = ftell(artist);
+
+        if (sscanf(line, "Date: %10s", concert_date) == 1) {
+            if (strcmp(concert_date, date) == 0) {
+                delete_start = line_start;
+                delete_end = line_end;
+                break;
+            }
+        }
+
+        if (strcmp(line, "////////////////////////////\n") == 0) {
+            found_end_line = 1;
+            break;
+        }
+
+        line_start = line_end;
+    }
+
+    if (delete_start != -1 && delete_end != -1) {
+        if (found_end_line) {
+            truncate_pos = delete_start;
+        } else {
+            // Move to the end of the file
+            fseek(artist, 0, SEEK_END);
+            truncate_pos = ftell(artist);
+        }
+
+        fseek(artist, 0, SEEK_SET);
+        FILE *temp = tmpfile();
+
+        if (temp == NULL) {
+            fclose(artist);
+            free(file_name);
+            return -1;
+        }
+
+        char ch;
+        while (ftell(artist) < truncate_pos && (ch = fgetc(artist)) != EOF) {
+            fputc(ch, temp);
+        }
+
+        fclose(artist);
+        fclose(temp);
+
+        if (rename(file_name, "temp.txt") != 0) {
+            free(file_name);
+            return -1;
+        }
+
+        if (rename("temp.txt", file_name) != 0) {
+            free(file_name);
+            return -1;
+        }
+
+        free(file_name);
+        return 0;
+    }
+
+    fclose(artist);
+    free(file_name);
+    return -1;
+}
+
+
+
+
 int main()
 {
-    create_concert(15, 100000.0, "Lili Ivanova", "01.01.2020", "Sofia", '0');
-    make_concert_public("Lili Ivanova", "01.01.2020");
+    create_concert(100, 4500, "Eminem", "10.12.2012", "Sofia", 'a');
 
     return 0;
 }
