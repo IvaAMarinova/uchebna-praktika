@@ -80,11 +80,10 @@ void generate_tickets(size_t capacity, float revenue, FILE *artist)
     }
 
     fprintf(artist, "Sum: %0.01f\n", sum);
-    fprintf(artist, "\n");
 }
 
 int create_concert(size_t capacity, float revenue,
-    const char *artist_name, const char *date, const char *location, char state)
+    const char *artist_name, const char *date, const char *location, int state)
 {
     FILE *artist;
     char new_artists = 0;
@@ -116,7 +115,7 @@ int create_concert(size_t capacity, float revenue,
     fprintf(artist, "Date: %s\n", date);
     fprintf(artist, "Capacity: %zu\n", capacity);
     fprintf(artist, "Revenue: %.2f\n", revenue);
-    fprintf(artist, "State: %c\n", state);
+    fprintf(artist, "State: %d\n", state);
     fprintf(artist, "Bought tickets: 0\n");
     fprintf(artist, "\n");
 
@@ -147,22 +146,37 @@ int make_concert_public(const char *artist_name, const char *date) {
         return -1;
     }
 
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
     char line[100];
     char concert_date[11];
 
+    int in_concert = 0, count = 0;
     while (fgets(line, sizeof(line), artist)) {
-        if (sscanf(line, "Date: %10s", concert_date) == 1) {
-            if (strcmp(concert_date, date) == 0) {
-                fseek(artist, -2, SEEK_CUR);
-                fprintf(artist, "1\n");
-                fclose(artist);
-                free(file_name);
-                return 1;
-            }
+        if (in_concert != 0) {
+            count++;
+        }
+        if (count == 3) {
+            fseek(artist, -2, SEEK_CUR);
+            fprintf(artist, "1");
+            fclose(artist);
+            free(date_formated);
+            free(file_name);
+            return 1;
+        }
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            in_concert = 1;
+            count = 0; 
         }
     }
+
+    fclose(artist);
+    free(date_formated);
+    free(file_name);
     return -1;
 }
+
 
 int delete_concert(const char *artist_name, const char *date) {
     char *file_name = file_name_generator(artist_name);
@@ -254,7 +268,7 @@ int delete_concert(const char *artist_name, const char *date) {
 
 int main()
 {
-    create_concert(100, 4500, "Eminem", "10.12.2012", "Sofia", 'a');
+    make_concert_public("Eminem", "10.12.2012");
 
     return 0;
 }
