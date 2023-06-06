@@ -181,7 +181,39 @@ int make_concert_public(const char *artist_name, const char *date) {
 }
 
 int edit_location(const char *artist_name, const char *date, 
-    const char *new_location);
+    const char *new_location)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    char line[100], prev_line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            printf("found\n");
+            fseek(artist, -strlen(line) -strlen(prev_line), SEEK_CUR);
+            fprintf(artist, "Location: %s\n", new_location);
+            break;
+        }
+        strcpy(prev_line, line);
+    }
+
+    fclose(artist);
+    free(date_formated);
+    free(file_name);
+    return -1;
+}
 
 
 int edit_date(const char *artist_name, const char *date, const char *new_date)
@@ -225,8 +257,7 @@ int delete_concert(const char *artist_name, const char *date) {
 
 int main()
 {
-    create_concert(17, 1200, "Lili Ivanova", "11.12.2020", "Sofia", 0);
-    edit_date("Lili Ivanova", "11.12.2020", "33.33.3333");
+    edit_location("Lili Ivanova", "33.33.3333", "varna");
 
     return 0;
 }
