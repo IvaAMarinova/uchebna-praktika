@@ -215,6 +215,17 @@ int edit_location(const char *artist_name, const char *date,
     return -1;
 }
 
+float find_revenue(const char* artist_name, const char *date)
+{
+
+}
+
+void recalculate_tickets(const char *artist_name, const char *date, size_t new_capacity)
+{
+    // delete rows with tickets
+    float revenue = find_revenue(artist_name, date);
+    generate_tickets(new_capacity, revenue, NULL);
+}
 
 int edit_date(const char *artist_name, const char *date, const char *new_date)
 {
@@ -248,7 +259,50 @@ int edit_date(const char *artist_name, const char *date, const char *new_date)
     free(file_name);
     return -1;
 }
-int edit_capacity(const char *artist_name, const char *date, size_t new_capacity);
+
+int edit_capacity(const char *artist_name, const char *date, size_t new_capacity) // not working
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            printf("found\n");
+            fgets(line, sizeof(line), artist);
+            printf("%s\n", line);
+            size_t len = strlen(line);
+            fseek(artist, -len, SEEK_CUR);
+            for(int i = 0; i < len; i++)
+            {
+                fprintf(artist, " ");
+            }
+            fseek(artist, -len, SEEK_CUR);
+            fprintf(artist, "Capacity: %zu\n", new_capacity);
+            break;
+        }
+    }
+
+
+    // add recalculating of tickets
+
+    fclose(artist);
+    free(date_formated);
+    free(file_name);
+    return -1;
+}
 int edit_revenue(const char *artist_name, const char *date, float new_revenue);
 int delete_concert(const char *artist_name, const char *date) {
 
@@ -257,7 +311,8 @@ int delete_concert(const char *artist_name, const char *date) {
 
 int main()
 {
-    edit_location("Lili Ivanova", "33.33.3333", "varna");
+    //create_concert(100, 1000, "Lili Ivanova", "11.11.1111", "Sofia", 0);
+    edit_capacity("Lili Ivanova", "11.11.1111", 15);
 
     return 0;
 }
