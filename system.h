@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+void create_artist(const char *artist_name, const char *password, const char *safe_message);
 int create_concert(size_t capacity, float revenue, 
     char *artist_name, char *date, char *location, int state);
 int make_concert_public(const char *artist_name, const char *date);
