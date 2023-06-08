@@ -44,11 +44,11 @@ int file_exists(const char *filename)
         return 0; 
     }
 }
-/*
+
 void generate_tickets(size_t capacity, float revenue, FILE *artist)
 {
     int rows = (int)(log2(capacity) + 1);
-    //float seat_prices[rows];
+    float seat_prices[rows];
     float seat = 0, prev_seat = 0, sum = 0;
     size_t middle_seat_index = rows / 2;
 
@@ -57,7 +57,7 @@ void generate_tickets(size_t capacity, float revenue, FILE *artist)
 
     // we set the seat as the middle seat
     seat = revenue / capacity;
-    //seat_prices[middle_seat_index] = seat;
+    seat_prices[middle_seat_index] = seat;
 
     prev_seat = seat;
     sum = seat;
@@ -316,4 +316,3 @@ int main()
 
     return 0;
 }
-*/
