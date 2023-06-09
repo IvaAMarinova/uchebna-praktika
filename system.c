@@ -431,6 +431,7 @@ int delete_concert(const char *artist_name, const char *date) {
         }
 
         if (delete_flag == 1 && strncmp(line, "////////////////////////////\n", strlen("////////////////////////////\n")) == 0) {
+            fgets(line, sizeof(line), artist);
             delete_flag = 2;
         }
         if (delete_flag == 0 || delete_flag == 2) {
@@ -456,8 +457,9 @@ int main()
     // create_concert(8, 80, "Galena", "12.10.1010", "Sofia - Eleven", 0);
 
     //make_concert_public("Galena", "10.10.1010");
-    edit_location("Galena", "10.10.1010", "garata");
+    //edit_location("Galena", "10.10.1010", "garata");
 
+    delete_concert("Galena", "10.10.1010");
 
     return 0;
 }
