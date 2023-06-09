@@ -604,34 +604,29 @@ int print_concert_info(const char *artist_name, const char *date)
     strcat(date_formated, date);
 
     int print_flag = 0;
-    // flag = 1 - nachalo na koncerta
-    // flag = 2 - kraq na koncerta
 
     char line[100];
     while (fgets(line, sizeof(line), artist)) {
         if (print_flag == 0 && strncmp(line, date_formated, strlen(date_formated)) == 0) {
             printf("found\n");
             print_flag = 1;
-            fseek(artist, -strlen(line), SEEK_CUR);
-            break;
+            while(fgets(line, sizeof(line), artist))
+            {
+                if (strncmp(line, "////////////////////////////\n", strlen("////////////////////////////\n")) == 0) {
+                    fclose(artist);
+                    free(date_formated);
+                    free(file_name);
+                    return 1;
+                }
+                printf("%s", line);
+            }
         }    
     }  
-
-    if(print_flag == 1)
-    {
-        while(fgets(line, sizeof(line), artist))
-        {
-            if (strncmp(line, "////////////////////////////\n", strlen("////////////////////////////\n")) == 0) {
-                return 1;
-            }
-            printf("%s", line);
-        }
-    }
 
     fclose(artist);
     free(date_formated);
     free(file_name);
-    return 1;
+    return -1;
 }
 
 int main()
