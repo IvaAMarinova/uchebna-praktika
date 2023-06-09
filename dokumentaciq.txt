@@ -11,3 +11,5 @@ kompilirai s -lm nakraq
 
 1  - ako funkciqta e uspqla
 -1 - ako funkciqta ne e uspqla
+// vse pak gi poglejdai predi da polzvash, moje i da ima izkluchenie
+// zavisi ot funkciqta
