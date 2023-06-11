@@ -45,24 +45,24 @@ int file_exists(const char *filename)
     }
 }
 
-void create_artist(const char *artist_name, const char *password, const char *safe_message)
+int create_artist(const char *artist_name, const char *password, const char *safe_message)
 {
     char *file_name = file_name_generator(artist_name, "artist");
     if (file_name == NULL) {
-        return;
+        return -1;
     }
 
     if (file_exists(file_name) == 1) {
         printf("Artist already exists.\n");
         free(file_name);
-        return;
+        return -1;
     }
 
     FILE *artist = fopen(file_name, "w");
     if (artist == NULL) {
         printf("Error opening file.\n");
         free(file_name);
-        return;
+        return -1;
     }
 
     fprintf(artist, "Name: %s\n", artist_name);
@@ -72,6 +72,7 @@ void create_artist(const char *artist_name, const char *password, const char *sa
 
     free(file_name);
     fclose(artist);
+    return 1;
 }
 
 void generate_tickets(size_t capacity, float revenue, FILE *artist)
@@ -127,7 +128,6 @@ int create_concert(size_t capacity, float revenue,
         return -1;
     }
 
-
     artist = fopen(file_name, "a");
 
     if (artist == NULL) {
@@ -137,8 +137,8 @@ int create_concert(size_t capacity, float revenue,
     }
 
     fseek(artist, 1, SEEK_END);
-    fprintf(artist, "Location: %s\n", location);
     fprintf(artist, "Date: %s\n", date);
+    fprintf(artist, "Location: %s\n", location);
     fprintf(artist, "Capacity: %zu\n", capacity);
     fprintf(artist, "Revenue: %.2f\n", revenue);
     fprintf(artist, "State: %d\n", state);
@@ -157,7 +157,7 @@ int create_concert(size_t capacity, float revenue,
 
     free(file_name);
     fclose(artist);
-    return 0;
+    return 1;
 }
 
 int make_concert_public(const char *artist_name, const char *date) {
@@ -182,7 +182,7 @@ int make_concert_public(const char *artist_name, const char *date) {
             int counter = 0;
             while (fgets(line, sizeof(line), artist)) {
                 counter++;
-                if(counter == 3)
+                if(counter == 4)
                 {
                     fseek(artist, -2, SEEK_CUR);
                     fprintf(artist, "1");
@@ -201,7 +201,87 @@ int make_concert_public(const char *artist_name, const char *date) {
     return -1;
 }
 
-int edit_location(const char *artist_name, const char *date, 
+int is_concert_public(const char *artist_name, const char *date) // 0 -no, 1 - yes, -1 - error
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            int counter = 0;
+            while (fgets(line, sizeof(line), artist)) {
+                counter++;
+                if(counter == 4)
+                {
+                    fclose(artist);
+                    free(date_formated);
+                    free(file_name);
+                    return line[0] - '0';
+                }
+            }
+        }
+    }
+
+    fclose(artist);
+    free(date_formated);
+    free(file_name);
+    return -1;
+}
+
+int edit_date(const char *artist_name, const char *date, const char *new_date)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    if(is_concert_public(artist_name, date) == 1) {
+        fclose(artist);
+        free(file_name);
+        printf("This concert is public and you can't edit it.\n");
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            printf("found\n");
+            fseek(artist, -strlen(line), SEEK_CUR);
+            fprintf(artist, "Date: %s\n", new_date);
+            return 1;
+        }
+    }
+
+    fclose(artist);
+    free(date_formated);
+    free(file_name);
+    return -1;
+}
+
+int edit_location(const char *artist_name, const char *date,
     const char *new_location)
 {
     char *file_name = file_name_generator(artist_name, "artist");
@@ -215,46 +295,63 @@ int edit_location(const char *artist_name, const char *date,
         return -1;
     }
 
-    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
-    strcpy(date_formated, "Date: ");
-    strcat(date_formated, date);
+    if(is_concert_public(artist_name, date) == 1) {
+        fclose(artist);
+        free(file_name);
+        printf("This concert is public and you can't edit it.\n");
+        return -1;
+    }
+
+    char *date_formatted = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formatted, "Date: ");
+    strcat(date_formatted, date);
 
     char line[100], prev_line[100];
     while (fgets(line, sizeof(line), artist)) {
-        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+        if (strncmp(line, date_formatted, strlen(date_formatted)) == 0) {
             printf("found\n");
-            fseek(artist, -strlen(line) -strlen(prev_line), SEEK_CUR);
-            fprintf(artist, "Location: %s\n", new_location);
-            break;
+            fgets(line, sizeof(line), artist);
+            size_t len = strlen(line);
+
+            fseek(artist, -len, SEEK_CUR);
+            fprintf(artist, "Location: %s", new_location);
+
+            if (strlen(new_location) < len - 1) {
+                for (size_t i = strlen(new_location) + 11; i < len - 1; i++) {
+                    fprintf(artist, " ");
+                }
+            }
+            return 1;
         }
         strcpy(prev_line, line);
     }
 
     fclose(artist);
-    free(date_formated);
+    free(date_formatted);
     free(file_name);
     return -1;
 }
 
-float find_revenue(FILE *artist, const char *date_formated)
-{
+
+float find_revenue(FILE *artist, const char *date_formated) {
     char line[100];
     while (fgets(line, sizeof(line), artist)) {
         if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
             fgets(line, sizeof(line), artist);
             fgets(line, sizeof(line), artist);
+            fgets(line, sizeof(line), artist);
             fseek(artist, -strlen(line) + strlen("Revenue: "), SEEK_CUR);
-            return atoi(line);
+            return atof(line);
         }
     }
 
     fclose(artist);
-    return -1;
+    return -1.0;
 }
 
 void recalculate_tickets(FILE *artist, size_t capacity, float revenue, char const *file_name)
 {
-    FILE *artist_temp = fopen("artists/temp", "a"), *beginning = fopen(file_name, "r+");
+    FILE *artist_temp = fopen("artists/temp.txt", "a"), *beginning = fopen(file_name, "r+");
     if (artist_temp == NULL) {
         printf("Error opening file.\n");
         return;
@@ -278,17 +375,18 @@ void recalculate_tickets(FILE *artist, size_t capacity, float revenue, char cons
         fprintf(artist_temp, "%s", line);
     }
 
-    rename("temp.txt", file_name);
+    rename("artists/temp.txt", file_name);
+    fclose(artist_temp);
 }
 
-int edit_date(const char *artist_name, const char *date, const char *new_date)
+int edit_capacity2(const char *artist_name, const char *date, size_t new_capacity) // not working
 {
     char *file_name = file_name_generator(artist_name, "artist");
     if (file_name == NULL) {
         return -1;
     }
 
-    FILE *artist = fopen(file_name, "r+");
+    FILE *artist = fopen(file_name, "r+"), *beginning = fopen(file_name, "r");
     if (artist == NULL) {
         free(file_name);
         return -1;
@@ -299,43 +397,11 @@ int edit_date(const char *artist_name, const char *date, const char *new_date)
     strcat(date_formated, date);
 
     char line[100];
+    char old_capacity_str[7] = "";
     while (fgets(line, sizeof(line), artist)) {
         if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
             printf("found\n");
-            fseek(artist, -strlen(line), SEEK_CUR);
-            fprintf(artist, "Date: %s\n", new_date);
-            break;
-        }
-    }
-
-    fclose(artist);
-    free(date_formated);
-    free(file_name);
-    return -1;
-}
-
-int edit_capacity(const char *artist_name, const char *date, size_t new_capacity) // not working
-{
-    char *file_name = file_name_generator(artist_name, "artist");
-    if (file_name == NULL) {
-        return -1;
-    }
-
-    FILE *artist = fopen(file_name, "r+"), *beginning = fopen(file_name, "r+");
-    if (artist == NULL) {
-        free(file_name);
-        return -1;
-    }
-
-    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
-    strcpy(date_formated, "Date: ");
-    strcat(date_formated, date);
-
-    char line[100];
-    char old_capacity_str[7];
-    while (fgets(line, sizeof(line), artist)) {
-        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
-            printf("found\n");
+            fgets(line, sizeof(line), artist);
             fgets(line, sizeof(line), artist);
             printf("%s\n", line);
 
@@ -364,12 +430,198 @@ int edit_capacity(const char *artist_name, const char *date, size_t new_capacity
         }
     }
 
-    size_t old_capacity = atoi(old_capacity_str);
+    // size_t old_capacity = atoi(old_capacity_str);
 
-    FILE *temp = beginning;
+    // FILE *temp = beginning;
 
-    float revenue = find_revenue(temp, date_formated);
-    recalculate_tickets(artist_name, new_capacity, revenue, file_name);
+    // float revenue = find_revenue(temp, date_formated);
+    // recalculate_tickets(artist, new_capacity, revenue, file_name);
+
+    fclose(artist);
+    free(date_formated);
+    free(file_name);
+    return 1;
+}
+
+int edit_capacity(const char *artist_name, const char *date,
+    int new_capacity)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+"), *temp = fopen("artists/temp.txt", "w");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    if(is_concert_public(artist_name, date) == 1) {
+        fclose(artist);
+        free(file_name);
+        printf("This concert is public and you can't edit it.\n");
+        return -1;
+    }
+
+    char *date_formatted = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formatted, "Date: ");
+    strcat(date_formatted, date);
+
+    char line[100], prev_line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, date_formatted, strlen(date_formatted)) == 0) {
+            printf("found\n");
+
+            fgets(line, sizeof(line), artist);
+            fgets(line, sizeof(line), artist);
+
+            size_t len = strlen(line);
+
+            fseek(artist, -len, SEEK_CUR);
+            char new_cap[20];
+            sprintf(new_cap, "%d", new_capacity);
+            fprintf(artist, "Capacity: %s", new_cap);
+
+            if (strlen(new_cap) < len - 1) {
+                for (size_t i = strlen(new_cap) + 10; i < len - 1; i++) {
+                    fprintf(artist, " ");
+                }
+            }
+            fprintf(artist, "\n");
+            break;
+        }
+        strcpy(prev_line, line);
+    }
+
+    fclose(artist);
+    free(date_formatted);
+    free(file_name);
+    return -1;
+}
+
+int edit_revenue(const char *artist_name, const char *date, float new_revenue);
+
+int delete_concert(const char *artist_name, const char *date) {
+    FILE *temp = fopen("artists/temp.txt", "w"); 
+    FILE *beginning = fopen("artists/artists.txt", "r");
+
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        fclose(temp); 
+        fclose(beginning);
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+");
+    if (artist == NULL) {
+        free(file_name);
+        fclose(temp);
+        fclose(beginning);
+        return -1;
+    }
+
+    if(is_concert_public(artist_name, date) == 1) {
+        fclose(artist);
+        free(file_name);
+        printf("This concert is public and you can't edit it.\n");
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    int delete_flag = 0;
+    // flag = 1 - nachalo na koncerta, koito triem
+    // flag = 2 - kraq na koncerta, koito triem
+
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (delete_flag == 0 && strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            printf("found\n");
+            delete_flag = 1;
+            fseek(artist, -strlen(line), SEEK_CUR);
+        }
+
+        if (delete_flag == 1 && strncmp(line, "////////////////////////////\n", strlen("////////////////////////////\n")) == 0) {
+            fgets(line, sizeof(line), artist);
+            delete_flag = 2;
+        }
+        if (delete_flag == 0 || delete_flag == 2) {
+            fprintf(temp, "%s", line);
+        }
+    }  
+
+    remove(file_name);
+    rename("artists/temp.txt", file_name);
+
+    free(date_formated);
+    free(file_name);
+    fclose(artist);
+    fclose(temp);
+    return 0;
+}
+
+int print_artist_info(const char *artist_name)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        printf("%s", line);
+    }
+
+    fclose(artist);
+    free(file_name);
+    return 1;
+}
+
+int print_concert_info(const char *artist_name, const char *date)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    int print_flag = 0;
+
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (print_flag == 0 && strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            printf("found\n");
+            print_flag = 1;
+            while(fgets(line, sizeof(line), artist))
+            {
+                if (strncmp(line, "////////////////////////////\n", strlen("////////////////////////////\n")) == 0) {
+                    fclose(artist);
+                    free(date_formated);
+                    free(file_name);
+                    return 1;
+                }
+                printf("%s", line);
+            }
+        }    
+    }  
 
     fclose(artist);
     free(date_formated);
@@ -377,16 +629,22 @@ int edit_capacity(const char *artist_name, const char *date, size_t new_capacity
     return -1;
 }
 
-int edit_revenue(const char *artist_name, const char *date, float new_revenue);
-int delete_concert(const char *artist_name, const char *date) {
-
-}
-
-
 int main()
 {
-    //create_concert(100, 1000, "Lili Ivanova", "11.11.1111", "Sofia", 0);
-    edit_capacity("Lili Ivanova", "11.11.1111", 5);
+    // create_artist("Galena", "piemise", "piq");
+    // create_concert(10, 70, "Galena", "10.10.1010", "Sofia - Plaza", 0);
+    // create_concert(8, 80, "Galena", "12.10.1010", "Sofia - Eleven", 0);
 
+    //make_concert_public("Galena", "10.10.1010");
+    //edit_location("Galena", "10.10.1010", "garata");
+    //delete_concert("Galena", "10.10.1010");
+    //print_artist_info("Galena");
+    print_concert_info("Galena", "12.10.1010");
+
+    //edit_capacity("Galena", "12.10.1010", 10);
+
+
+    
     return 0;
 }
+

@@ -3,7 +3,7 @@
 #include <string.h>
 #include<time.h>
 
-void create_artist(const char *artist_name, const char *password, const char *safe_message);
+int create_artist(const char *artist_name, const char *password, const char *safe_message);
 int create_concert(size_t capacity, float revenue, 
     char *artist_name, char *date, char *location, int state);
 int make_concert_public(const char *artist_name, const char *date);
@@ -18,3 +18,6 @@ int edit_location(const char *artist_name, const char *date,
 int edit_date(const char *artist_name, const char *date, const char *new_date);
 int edit_capacity(const char *artist_name, const char *date, size_t new_capacity);
 int edit_revenue(const char *artist_name, const char *date, float new_revenue);
+
+int print_concert_info(const char *artist_name, const char *date);
+int print_artist_info(const char *artist_name);
