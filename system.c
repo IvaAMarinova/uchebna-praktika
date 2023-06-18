@@ -719,7 +719,7 @@ int print_concert_info(const char *artist_name, const char *date)
     return -1;
 }
 
-float offer_ticket(const char *artist_name, const char *date, float wanted_price) // NOT DONE
+float offer_ticket(const char *artist_name, const char *date, float wanted_price, size_t *row, float *possible_price) // NOT DONE
 {
     char *file_name = file_name_generator(artist_name, "artist");
     if (file_name == NULL) {
@@ -787,6 +787,12 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
     return -1;
 }
 
+void first_last_of_row(size_t row, size_t *first_seat, size_t *last_seat)
+{
+    *first_seat = pow(2, row - 1);
+    *last_seat = pow(2, row) - 1;
+}
+
 int buy_ticket(const char *artist_name, const char *date, size_t row)
 {
     char *file_name = file_name_generator(artist_name, "artist");
@@ -804,14 +810,59 @@ int buy_ticket(const char *artist_name, const char *date, size_t row)
     strcpy(date_formated, "Date: ");
     strcat(date_formated, date);
 
+    size_t first_seat, last_seat, curr_seat;
+    first_last_of_row(row, &first_seat, &last_seat);
+    last_seat++; // purvi seat na drugiq red
+    char str_first_seat[10], str_last_seat[10];
+    sprintf(str_first_seat, "%zu -", first_seat);
+    sprintf(str_last_seat, "%zu -", last_seat);
+
+    printf("%s\n", str_first_seat);
+    printf("%s\n", str_last_seat);
+
     char line[100];
+    char found_flag = 0;
     while (fgets(line, sizeof(line), artist)) {
-        // func ot koe mqsto zapochvat mestata na tozi row
-        // func do koe svurshvat?
-        // purvoto svobodno se vzima
-                
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            printf("found\n");
+            while(fgets(line, sizeof(line), artist))
+            {
+                if (strncmp(line, str_first_seat, strlen(str_first_seat)) == 0) {
+                    found_flag = 1;
+                }
+
+                if(found_flag == 1)
+                {
+                    char seat[10];
+                    sprintf(seat, "%zu", curr_seat);
+                    strcat(seat, " - 0");
+                    printf("%s\n", seat);
+                    if (strncmp(line, seat, strlen(seat)) == 0) {
+                        printf("found2\n");
+                        fseek(artist, -2, SEEK_CUR);
+                        fprintf(artist, "1");
+                        fclose(artist);
+                        free(file_name);
+                        free(date_formated);
+                        return 1;
+                    }
+                }
+
+                // if(strncmp(line, "////////////////////////////", strlen("////////////////////////////")) == 0 ||
+                //     strncmp(line, str_last_seat, strlen(str_last_seat))) // nqma na tozi row
+                // {
+                //     //break;
+                // }
+                curr_seat++;
+            }
+            
+        }    
     }  
 
+    fclose(artist);
+    free(file_name);
+    free(date_formated);
+    return -1;
 }
 
 int print_artists_lineup()
@@ -862,7 +913,9 @@ int main()
 
     //edit_revenue("Galena", "12.10.1010", 100);
 
-    print_artists_lineup();
+    //print_artists_lineup();
+
+    buy_ticket("Galena", "12.10.1023", 2);
     
     return 0;
 }

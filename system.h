@@ -29,5 +29,5 @@ int delete_concert(const char *artist_name, const char *date);
 
 
 // left to do
-float offer_ticket(const char *artist_name, const char *date, float wanted_price);
+float offer_ticket(const char *artist_name, const char *date, float wanted_price, size_t *row, float *possible_price);
 int buy_ticket(const char *artist_name, const char *date, size_t row);
