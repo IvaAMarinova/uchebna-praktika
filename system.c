@@ -143,7 +143,6 @@ int create_concert(size_t capacity, float revenue,
     fprintf(artist, "Capacity: %zu\n", capacity);
     fprintf(artist, "Revenue: %.2f\n", revenue);
     fprintf(artist, "State: %d\n", state);
-    fprintf(artist, "Bought tickets: 0\n");
     fprintf(artist, "\n");
 
     generate_tickets(capacity, revenue, artist);
@@ -800,7 +799,7 @@ int buy_ticket(const char *artist_name, const char *date, size_t row)
         return -1;
     }
 
-    FILE *artist = fopen(file_name, "r");
+    FILE *artist = fopen(file_name, "r+");
     if (artist == NULL) {
         free(file_name);
         return -1;
@@ -818,7 +817,7 @@ int buy_ticket(const char *artist_name, const char *date, size_t row)
     sprintf(str_last_seat, "%zu -", last_seat);
 
     printf("%s\n", str_first_seat);
-    printf("%s\n", str_last_seat);
+    printf("%s\n", str_last_seat);  
 
     char line[100];
     char found_flag = 0;
@@ -829,6 +828,7 @@ int buy_ticket(const char *artist_name, const char *date, size_t row)
             {
                 if (strncmp(line, str_first_seat, strlen(str_first_seat)) == 0) {
                     found_flag = 1;
+                    curr_seat = first_seat;
                 }
 
                 if(found_flag == 1)
@@ -848,11 +848,11 @@ int buy_ticket(const char *artist_name, const char *date, size_t row)
                     }
                 }
 
-                // if(strncmp(line, "////////////////////////////", strlen("////////////////////////////")) == 0 ||
-                //     strncmp(line, str_last_seat, strlen(str_last_seat))) // nqma na tozi row
-                // {
-                //     //break;
-                // }
+                if(strncmp(line, "////////////////////////////", strlen("////////////////////////////")) == 0 ||
+                    strncmp(line, str_last_seat, strlen(str_last_seat)) == 0) // nqma na tozi row
+                {
+                    break;
+                }
                 curr_seat++;
             }
             
