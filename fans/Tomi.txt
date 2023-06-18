@@ -1,0 +1,14 @@
+Name: Tomi 
+Password: taylorfankote
+Safe message: taylor
+Balance: 0.0
+
+Tickets:
+////////////////////////////
+Artist: Galena
+Date: 12.10.2023
+Location: Sofia - Eleven
+Row: 2
+Seat: 3
+Price: 10.6 lv
+////////////////////////////
