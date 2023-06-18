@@ -18,6 +18,8 @@ int file_exists(const char *file_name);
 int print_concert_info(const char *artist_name, const char *date);
 int print_artist_info(const char *artist_name);
 int print_artists_lineup();
+int print_all_concerts(const char *artist_name);
+int print_rows_concert(const char *artist_name, const char *date);
 
 // functions for editing concert info
 // CONCERT MUST STILL BE PRIVATE

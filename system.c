@@ -143,7 +143,7 @@ int create_concert(size_t capacity, float revenue,
     fprintf(artist, "Capacity: %zu\n", capacity);
     fprintf(artist, "Revenue: %.2f\n", revenue);
     fprintf(artist, "State: %d\n", state);
-    fprintf(artist, "\n");
+    fprintf(artist, "Prices: \n");
 
     generate_tickets(capacity, revenue, artist);
     
@@ -537,7 +537,7 @@ int edit_revenue(const char *artist_name, const char *date, float new_revenue)
         capacity = atof(capacity_str);
 
         fgets(line, sizeof(line), artist); // Revenue
-        size_t len = strlen(line);  
+        size_t len = strlen(line);
 
         fseek(artist, -len, SEEK_CUR);
         fprintf(temp, "Revenue: %.01f", new_revenue);
@@ -749,10 +749,10 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
         if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
             printf("found\n");
             while (fgets(line, sizeof(line), artist)) {
-                if (strncmp(line, "\n", strlen("\n")) == 0) {
+                if (strncmp(line, "Prices:", strlen("Prices:")) == 0) {
+                    fgets(line, sizeof(line), artist);
                     size_t len = strlen("Row x: ");
                     for (; strncmp(line, "Sum", strlen("Sum")) != 0; rows_cnt++, fgets(line, sizeof(line), artist)) {
-                        fseek(artist, -strlen(line), SEEK_CUR);
                         if (rows_cnt <= 9) {
                             rows[rows_cnt] = atof(line + len);
                         } else {
@@ -764,8 +764,16 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
         }
     }
 
+    // all prices
+    printf("All prices:\n");
+    for (size_t i = 0; i < rows_cnt; i++) {
+        printf("%.2f\n", rows[i]);
+    }
     // looking for the two numbers the given value is between
     if (rows_cnt == 1) {
+        *row = 1;
+        *possible_price = rows[0];
+        *seat = 1;
         fclose(artist);
         free(file_name);
         free(date_formated);
@@ -773,7 +781,7 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
     }
 
     for (size_t i = 0; i < rows_cnt - 1; i++) {
-        if (wanted_price < rows[i] && wanted_price > rows[i + 1]) {
+        if (wanted_price <= rows[i] && wanted_price >= rows[i + 1]) {
             size_t first_seat, last_seat, curr_seat;
             first_last_of_row(i + 1, &first_seat, &last_seat);
             for (curr_seat = first_seat; curr_seat <= last_seat; curr_seat++) {
@@ -800,8 +808,6 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
     free(date_formated);
     return -1;
 }
-
-
 
 int buy_ticket(const char *artist_name, const char *date, size_t row, float *price, size_t *seat)
 {
@@ -919,6 +925,74 @@ int print_artists_lineup()
     return 1;
 }
 
+int print_all_concerts(const char *artist_name)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char line[100];
+
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, "Date: ", strlen("Date: ")) == 0) {
+            printf("%s", line);
+        }
+        if(strncmp(line, "Location: ", strlen("Location: ")) == 0) {
+            printf("%s", line);
+        }
+        if(strncmp(line, "State: ", strlen("State: ")) == 0) {
+            printf("%s\n", line);
+        }
+    }
+    return 1;
+}
+
+int print_rows_concert(const char *artist_name, const char *date)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    char line[100];
+    char found_flag = 0;
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            found_flag = 1;
+        }
+        if (found_flag == 1) {
+            if (strncmp(line, "Row ", strlen("Row ")) == 0) {
+                printf("%s", line);
+            }
+            if (strncmp(line, "Sum", strlen("Sum")) == 0) {
+                break;
+            }
+        }
+    }
+
+    free(file_name);
+    free(date_formated);
+    fclose(artist);
+    return 1;
+}
+
 int main()
 {
     //create_artist("Galena", "piemise", "piq");
@@ -938,14 +1012,17 @@ int main()
 
     //buy_ticket("Galena", "12.10.1023", 2);
 
-    size_t row;
-    float possible_price;
-    size_t seat;
+    //size_t row;
+    //float possible_price;
+    //size_t seat;
 
     //offer_ticket("Galena", "12.10.1023", 10, &row, &possible_price, &seat);
-    buy_ticket("Galena", "12.10.1023", 2, &possible_price, &seat);
-    printf("row: %d price: %f seat: %ld\n", 2, possible_price, seat);
+    //buy_ticket("Galena", "12.10.1023", 2, &possible_price, &seat);
+    //printf("row: %d price: %f seat: %ld\n", 2, possible_price, seat);
     
+    //print_all_concerts("Galena");
+
+    print_rows_concert("Galena", "12.10.1023");
     return 0;
 }
 
