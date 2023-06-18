@@ -787,32 +787,32 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
     return -1;
 }
 
-// int buy_ticket(const char *artist_name, const char *date, size_t row)
-// {
-//     char *file_name = file_name_generator(artist_name, "artist");
-//     if (file_name == NULL) {
-//         return -1;
-//     }
+int buy_ticket(const char *artist_name, const char *date, size_t row)
+{
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
 
-//     FILE *artist = fopen(file_name, "r");
-//     if (artist == NULL) {
-//         free(file_name);
-//         return -1;
-//     }
+    FILE *artist = fopen(file_name, "r");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
 
-//     char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
-//     strcpy(date_formated, "Date: ");
-//     strcat(date_formated, date);
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
 
-//     char line[100];
-//     while (fgets(line, sizeof(line), artist)) {
-//         // func ot koe mqsto zapochvat mestata na tozi row
-//         // func do koe svurshvat?
-//         // purvoto svobodno se vzima
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        // func ot koe mqsto zapochvat mestata na tozi row
+        // func do koe svurshvat?
+        // purvoto svobodno se vzima
                 
-//     }  
+    }  
 
-// }
+}
 
 int print_artists_lineup()
 {
@@ -822,34 +822,29 @@ int print_artists_lineup()
     dir = opendir("artists");
     if (dir == NULL) {
         printf("Unable to open directory.\n");
-        return 1;
+        return -1;
     }
 
     while ((ent = readdir(dir)) != NULL) {
         char file_path[100];
-        snprintf(file_path, sizeof(file_path), "artists/%s", ent->d_name);
+        strcpy(file_path, "artists/");
+        strcat(file_path, ent->d_name);
 
         FILE *file = fopen(file_path, "r");
         if (file == NULL) {
             return -1;
         }
-        // Read the first line from the file
         char line[100];
         if (fgets(line, sizeof(line), file) != NULL) {
-            // Print the first line
             char name[100];
             snprintf(name, strlen(line) - strlen("Name: ") + 1, "%s", line + strlen("Name: "));
             printf("%s", name);
         }
-
-        // Close the file
         fclose(file);
     }
 
-    // Close the directory
     closedir(dir);
-
-    return 0;
+    return 1;
 }
 
 int main()
