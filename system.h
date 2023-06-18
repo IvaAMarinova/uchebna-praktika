@@ -23,4 +23,5 @@ int print_artist_info(const char *artist_name);
 
 
 // left to do
+char * offer_ticket(const char *artist_name, const char *date, float wanted_price);
 int buy_ticket(const char *artist_name, const char *date, float wanted_price);
