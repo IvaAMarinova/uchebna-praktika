@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include "system.h"
 
 char *file_name_generator(const char *name, const char *type)
 {
@@ -382,7 +379,7 @@ void recalculate_tickets(FILE *artist, size_t capacity, float revenue, char cons
 }
 
 int edit_capacity(const char *artist_name, const char *date,
-    int new_capacity)
+    size_t new_capacity)
 {
     char *file_name = file_name_generator(artist_name, "artist");
     if (file_name == NULL) {
@@ -427,8 +424,8 @@ int edit_capacity(const char *artist_name, const char *date,
         size_t len = strlen(line);
 
         fseek(artist, -len, SEEK_CUR);
-        fprintf(temp, "Capacity: %u\n", new_capacity);
-        printf("Capacity: %u\n", new_capacity);
+        fprintf(temp, "Capacity: %lu\n", new_capacity);
+        printf("Capacity: %lu\n", new_capacity);
 
         int count_chars_new_cap = 0;
         for(; new_capacity < 0; count_chars_new_cap++)
@@ -747,6 +744,7 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
             {
                 if (strncmp(line, "\n", strlen("\n")) == 0) {
                     float rows[18]; // 17 rows is max
+                    size_t rows_cnt = 0;
                     for(size_t i = 0; strncmp(line, "Sum", strlen("Sum")) != 0; i++)
                     {
                         size_t len = strlen("Row x: ");
@@ -754,19 +752,18 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
                         fseek(artist, -strlen(line), SEEK_CUR);
                         if(i <= 9)
                         {
-                            rows[i] = stof(line + len);
+                            rows[i] = atof(line + len);
                         } else 
                         {
-                            rows[i] = stof(line + len + 1);
+                            rows[i] = atof(line + len + 1);
                         }
+                        rows_cnt++;
                     }
 
-                    // looking for the two numbers the given value is between
-
-                    size_t rows_cnt = strlen(rows);
+                    // looking for the two numbers the given value is between  
                     if(rows_cnt == 1)
                     {
-                        close(artist);
+                        fclose(artist);
                         free(file_name);
                         free(date_formated);
                         return rows[0];
@@ -775,7 +772,7 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
                     {
                         if(wanted_price < rows[i] && wanted_price > rows[i + 1])
                         {
-                            close(artist);
+                            fclose(artist);
                             free(file_name);
                             free(date_formated);    
                             return rows[i + 1];
@@ -790,31 +787,69 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
     return -1;
 }
 
-int buy_ticket(const char *artist_name, const char *date, size_t row)
-{
-    char *file_name = file_name_generator(artist_name, "artist");
-    if (file_name == NULL) {
-        return -1;
-    }
+// int buy_ticket(const char *artist_name, const char *date, size_t row)
+// {
+//     char *file_name = file_name_generator(artist_name, "artist");
+//     if (file_name == NULL) {
+//         return -1;
+//     }
 
-    FILE *artist = fopen(file_name, "r");
-    if (artist == NULL) {
-        free(file_name);
-        return -1;
-    }
+//     FILE *artist = fopen(file_name, "r");
+//     if (artist == NULL) {
+//         free(file_name);
+//         return -1;
+//     }
 
-    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
-    strcpy(date_formated, "Date: ");
-    strcat(date_formated, date);
+//     char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+//     strcpy(date_formated, "Date: ");
+//     strcat(date_formated, date);
 
-    char line[100];
-    while (fgets(line, sizeof(line), artist)) {
-        // func ot koe mqsto zapochvat mestata na tozi row
-        // func do koe svurshvat?
-        // purvoto svobodno se vzima
+//     char line[100];
+//     while (fgets(line, sizeof(line), artist)) {
+//         // func ot koe mqsto zapochvat mestata na tozi row
+//         // func do koe svurshvat?
+//         // purvoto svobodno se vzima
                 
-    }  
+//     }  
 
+// }
+
+int print_artists_lineup()
+{
+    DIR *dir;
+    struct dirent *ent;
+
+    dir = opendir("artists");
+    if (dir == NULL) {
+        printf("Unable to open directory.\n");
+        return 1;
+    }
+
+    while ((ent = readdir(dir)) != NULL) {
+        char file_path[100];
+        snprintf(file_path, sizeof(file_path), "artists/%s", ent->d_name);
+
+        FILE *file = fopen(file_path, "r");
+        if (file == NULL) {
+            return -1;
+        }
+        // Read the first line from the file
+        char line[100];
+        if (fgets(line, sizeof(line), file) != NULL) {
+            // Print the first line
+            char name[100];
+            snprintf(name, strlen(line) - strlen("Name: ") + 1, "%s", line + strlen("Name: "));
+            printf("%s", name);
+        }
+
+        // Close the file
+        fclose(file);
+    }
+
+    // Close the directory
+    closedir(dir);
+
+    return 0;
 }
 
 int main()
@@ -830,9 +865,9 @@ int main()
     //print_concert_info("Galena", "12.10.1010");
     //edit_capacity("Galena", "12.10.1010", 10);
 
-    edit_revenue("Galena", "12.10.1010", 100);
+    //edit_revenue("Galena", "12.10.1010", 100);
 
-
+    print_artists_lineup();
     
     return 0;
 }
