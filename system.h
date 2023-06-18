@@ -3,9 +3,9 @@
 #include <string.h>
 #include <dirent.h>
 #include <math.h>
-#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 
 // done
 int create_user(const char *artist_name, const char *password, const char *safe_message, const char *type);
@@ -26,7 +26,6 @@ int edit_date(const char *artist_name, const char *date, const char *new_date);
 int edit_capacity(const char *artist_name, const char *date, size_t new_capacity);
 int edit_revenue(const char *artist_name, const char *date, float new_revenue);
 int delete_concert(const char *artist_name, const char *date);
-
 
 
 // left to do

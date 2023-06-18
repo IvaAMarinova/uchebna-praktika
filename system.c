@@ -538,7 +538,7 @@ int edit_revenue(const char *artist_name, const char *date, float new_revenue)
         capacity = atof(capacity_str);
 
         fgets(line, sizeof(line), artist); // Revenue
-        size_t len = strlen(line);
+        size_t len = strlen(line);  
 
         fseek(artist, -len, SEEK_CUR);
         fprintf(temp, "Revenue: %.01f", new_revenue);

@@ -475,9 +475,35 @@ void artists_menu(char* user_name, char* password, char* safe_message)
     } while (1);
 }
 
-void change_budget(char* budget)
+enum bool change_budget(char* budget)
 {
+    char *file_name = file_name_generator(user_name, "fans");
+    FILE* fan = fopen(file_name, "w");
+    if(fan == NULL)
+    {
+        free(fan);
+        return false;
+    }
 
+    int flag = 0;
+    char line[200];
+    while(fgets(line, sizeof(line), fan))
+    {
+        if(strncmp(line, "Budget: ", 8) == 0)
+        {
+            flag = 1;
+            break;
+        }
+    }
+    if(flag == 1)
+        {
+            fgets(line, sizeof(line), fan);
+            size_t len = strlen(line);
+
+            fseek(fan, -len, SEEK_CUR);
+            fprintf(fan, "Budget: %s\n", budget);
+        }
+    return true;
 }
 
 void fans_menu(char* user_name, char* password, char* safe_message, char* strbudget)
@@ -531,23 +557,11 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                     fgets(revenue, 20, stdin);
                     revenue[strlen(revenue) - 1] = '\0';
 
-                    int point = 0;
-                    for (int i = 0; i < strlen(revenue); i++)
+                    
+                    if (!check_number(revenue))
                     {
-                        if (revenue[i] < '0' || revenue[i] > '9')
-                        {
-                            printf("Invalid capacity! Try again!\n");
-                            continue;
-                        }
-                        if (revenue[i] == '.')
-                        {
-                            point++;
-                            if (point > 1)
-                            {
-                                printf("Invalid revenue! Try again!\n");
-                                continue;
-                            }
-                        }
+                        printf("Invalid capacity! Try again!\n");
+                        continue;
                     }
                     if (atof(strbudget) < atof(revenue))
                     {
@@ -561,7 +575,6 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                 } while (1);
 
                 // tuk vikam na iva funkciqta koqto shte vurne naj dobroto mqsto za cenata na potrebitelq
-
 
 				break;
             case 2:
