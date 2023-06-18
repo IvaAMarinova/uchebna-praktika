@@ -12,6 +12,7 @@ int create_user(const char *artist_name, const char *password, const char *safe_
 int create_concert(size_t capacity, float revenue, 
     const char *artist_name, const char *date, const char *location, int state);
 int make_concert_public(const char *artist_name, const char *date);
+int is_concert_public(const char *artist_name, const char *date);
 char *file_name_generator(const char *name, const char *type);
 int file_exists(const char *file_name);
 int print_concert_info(const char *artist_name, const char *date);
