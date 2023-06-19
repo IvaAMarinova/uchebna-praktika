@@ -161,6 +161,7 @@ int create_user(const char *name, const char *password, const char *safe_message
 
     if(strcmp(type, "fan") == 0)
     {
+        fprintf(artist, "Balance: 0\n");
         fprintf(artist, "Tickets: \n");
     } else {
         FILE *file = fopen("artists/artists_lineup.txt", "r");
@@ -1039,12 +1040,13 @@ int main()
     //make_concert_public("Ivana", "20.17.1011");
     //print_all_concerts("Ivana");
 
-    float price;
-    size_t seat, row;
+    // float price;
+    // size_t seat, row;
 
-    offer_ticket("Ivana", "20.17.1011", 80, &row, &price, &seat);
-    printf("price: %f row: %zu seat: %zu\n", price, row, seat);
-    buy_ticket("Ivana", "20.17.1011", seat);
+    // offer_ticket("Ivana", "20.17.1011", 80, &row, &price, &seat);
+    // printf("price: %f row: %zu seat: %zu\n", price, row, seat);
+    // buy_ticket("Ivana", "20.17.1011", seat);
+
     // print_rows_concert("Ivana", "20.17.1011");
     // float price;
     // size_t seat;
