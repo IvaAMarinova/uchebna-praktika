@@ -10,7 +10,7 @@ void generate_tickets(size_t capacity, float revenue, FILE *artist)
     size_t middle_seat_index = rows / 2 - 1;
 
     // set the prices of the middle row as the minimum
-    // price we can possibly give a seat and still hit revenue
+    // price we can possibly give a seat and be close to revenue
 
     // we set the seat as the middle seat
     seat = revenue / capacity;
@@ -21,7 +21,7 @@ void generate_tickets(size_t capacity, float revenue, FILE *artist)
     
     // we go from middle seat to root seat
     for (int i = middle_seat_index - 1; i >= 0; i--) {
-        seat = prev_seat * (1 + 0.01 * ((float)rows - i)); 
+        seat = prev_seat * (1 + 0.01 * ((float)rows - i) * 2); 
         sum += seat * pow(2, i);
         seat_prices[i] = seat;
         prev_seat = seat;
@@ -454,11 +454,11 @@ int edit_capacity(const char *artist_name, const char *date,
             new_capacity /= 10;
         }
     
-        if (count_chars_new_cap + strlen("Capacity: ") < len - 2) {
-            for (size_t i = count_chars_new_cap + strlen("Capacity: "); i < len - 1; i++) {
-                fprintf(temp, " ");
-            }
-        }  
+        // if (count_chars_new_cap + strlen("Capacity: ") < len - 2) {
+        //     for (size_t i = count_chars_new_cap + strlen("Capacity: "); i < len - 1; i++) {
+        //         fprintf(temp, " ");
+        //     }
+        // }  
     } else {
         fclose(artist);
         fclose(temp);
@@ -486,8 +486,6 @@ int edit_capacity(const char *artist_name, const char *date,
 
     fgets(line, sizeof(line), artist);
     fprintf(temp, "%s", line);
-
-    fprintf(temp, "\n");
 
     generate_tickets(new_capacity, revenue, temp);
 
@@ -589,8 +587,6 @@ int edit_revenue(const char *artist_name, const char *date, float new_revenue)
 
     fgets(line, sizeof(line), artist);
     fprintf(temp, "%s", line);
-
-    fprintf(temp, "\n");
 
     generate_tickets(capacity, new_revenue, temp);
 
@@ -928,7 +924,7 @@ int buy_ticket(const char *artist_name, const char *date, size_t seat)
         if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
             while(fgets(line, sizeof(line), artist))
             {
-                char seat_str[11];
+                char seat_str[MAX_LINE_LENGTH];
                 sprintf(seat_str, "%zu - 0", seat);
                 if(strncmp(line, seat_str, strlen(seat_str)) == 0)
                 {
@@ -968,7 +964,7 @@ int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, flo
 
     size_t first_seat, last_seat, curr_seat = 1;
     first_last_of_row(row, &first_seat, &last_seat);
-    char str_first_seat[10], str_last_seat[10];
+    char str_first_seat[MAX_LINE_LENGTH], str_last_seat[MAX_LINE_LENGTH];
     sprintf(str_first_seat, "%zu -", first_seat);
     sprintf(str_last_seat, "%zu -", last_seat);
 
@@ -988,7 +984,7 @@ int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, flo
                     break;
                 }
 
-                char row_str[10];
+                char row_str[MAX_LINE_LENGTH];
                 sprintf(row_str, "Row %zu: ", row);
                 if (strncmp(line, row_str, strlen(row_str)) == 0) { // row now check for 0
                     price_row = atof(line + strlen(row_str));
@@ -1001,7 +997,7 @@ int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, flo
 
                 if(found_flag == 1)
                 {
-                    char seat_str[10];
+                    char seat_str[MAX_LINE_LENGTH];
                     sprintf(seat_str, "%zu", curr_seat);
                     strcat(seat_str, " - 0");
                     printf("%s\n", seat_str);
@@ -1032,9 +1028,28 @@ int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, flo
 
 int main()
 {
-    //delete_concert("Ivana", "18.17.1010");
+    //delete_concert("Ivana", "20.17.1010");
     //create_concert(15, 4500, "Ivana", "20.17.1010", "Sofia - Plaza", 0);
-    edit_location("Ivana", "18.17.1010", "Bansko");
+    //edit_location("Ivana", "20.17.1010", "Slunchaka");
+    //edit_date("Ivana", "20.17.1010", "20.17.1011");
+    //edit_location("Ivana", "20.17.1011", "Slunchaka");
+    //edit_capacity("Ivana", "20.17.1011", 20);
+    //edit_revenue("Ivana", "20.17.1011", 1500);
+
+    //make_concert_public("Ivana", "20.17.1011");
+    //print_all_concerts("Ivana");
+
+    float price;
+    size_t seat, row;
+
+    offer_ticket("Ivana", "20.17.1011", 80, &row, &price, &seat);
+    printf("price: %f row: %zu seat: %zu\n", price, row, seat);
+    buy_ticket("Ivana", "20.17.1011", seat);
+    // print_rows_concert("Ivana", "20.17.1011");
+    // float price;
+    // size_t seat;
+    // buy_ticket_by_row("Ivana", "20.17.1011", 2, &price, &seat);
+    // printf("price: %f seat: %zu\n", price, seat);
     return 0;
 }
 
