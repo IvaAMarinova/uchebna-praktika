@@ -818,6 +818,10 @@ int offer_ticket(const char *artist_name, const char *date, float wanted_price, 
     return -1;
 }
 
+int buy_ticket(const char *artist_name, const char *date, size_t seat)
+{
+    
+}
 
 int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, float *price, size_t *seat)
 {
