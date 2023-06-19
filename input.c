@@ -199,7 +199,26 @@ void input_date(char *date)
     }while(1);
 }
 
+void input_username(char *user)
+{
+    printf("  User name:\n");
+    fgets(user, sizeof(user), stdin); // vzimane na user name ot potrebitelq
+    user[strlen(user) - 1] = '\0'; // maham \n ot user name
+}
 
+input_password(char *pass)
+{
+    printf("  Password:\n");
+    fgets(pass, sizeof(pass), stdin); // vzimane na parolata ot potrebitelq
+    pass[strlen(pass) - 1] = '\0'; // maham \n ot parolata
+}
+
+input_safe(char *safe)
+{
+    printf("  Safe message:\n");
+    fgets(safe, sizeof(safe), stdin); // vzimane na safe message ot potrebitelq
+    safe[strlen(safe) - 1] = '\0'; // maham \n ot safe message
+}
 
 void usual_input(char* user_name, char* password)
 {
@@ -217,9 +236,7 @@ char* forgotten_password(char* user_name, char* safe_message, char* type)
 
     do
     {
-        printf("  User name:\n");
-        fgets(user_name, sizeof(user_name), stdin); // vzimane na user name ot potrebitelq
-        user_name[strlen(user_name) - 1] = '\0'; // maham \n ot user name
+        input_username(user_name);
 
         if (!check_specials(user_name) && !verify_user_name(user_name, type))
         {
@@ -233,9 +250,7 @@ char* forgotten_password(char* user_name, char* safe_message, char* type)
 
     do
     {
-		printf("  Safe message:\n");
-		fgets(safe_message, sizeof(safe_message), stdin); // vzimane na safe message ot potrebitelq
-		safe_message[strlen(safe_message) - 1] = '\0'; // maham \n ot safe message
+		input_safe(safe_message);
         if (!check_specials(safe_message) && !verify_safe_message(safe_message, type, user_name))
         {
 			printf("Invalid safe message! Try again!\n");
@@ -247,9 +262,9 @@ char* forgotten_password(char* user_name, char* safe_message, char* type)
 	} while (1);
 
     char* new_password = NULL;
-    printf("Choose your new password:\n");
-    fgets(new_password, 20, stdin);
-    new_password[strlen(new_password) - 1] = '\0';
+    printf("You need to choose a new password!\n");
+
+    input_password(new_password);
 
     while (!check_specials(new_password))
     {
@@ -261,9 +276,8 @@ char* forgotten_password(char* user_name, char* safe_message, char* type)
 
     do
     {
-        printf("Please confirm the new password:\n");
-        fgets(confirm, 20, stdin);
-        confirm[strlen(confirm) - 1] = '\0';
+        printf("Please confirm the new password!\n");
+        input_password(confirm);
         if (strcmp(new_password, confirm) != 0)
         {
 			printf("Passwords do not match! Try again!\n");
@@ -273,8 +287,6 @@ char* forgotten_password(char* user_name, char* safe_message, char* type)
 			break;
 
     } while (1);
-    // napravi go da potvyrdi parolata
-
     return new_password;
 }
 
@@ -295,7 +307,8 @@ void verify_account(char* user_name, char* password, char* safe_message, char* t
     }
     strcmp(answer, "y") == 0 ? password = forgotten_password(user_name, safe_message, type) : 'n';
 
-    usual_input(user_name, password);
+    input_username(user_name);
+    input_password(password);
 
     while((!check_specials(user_name) && !verify_user_name(user_name, type)) || (!check_specials(password) && !verify_password(password, type, user_name)))
     {
@@ -323,26 +336,24 @@ void verify_account(char* user_name, char* password, char* safe_message, char* t
         }
         strcmp(answer, "y") == 0 ? password = forgotten_password(user_name, safe_message, type) : 'n';
 
-        usual_input(user_name, password);
+        input_username(user_name);
+        input_password(password);
     }
 }
 
 void create_account(char* user_name, char* password, char* safe_message, char* budget, char* type)
 {   
-    usual_input(user_name, password);
-
-    printf("  Safe message:\n");
-    fgets(safe_message, 20, stdin); // vzimane na parolata ot potrebitelq
-    safe_message[strlen(safe_message) - 1] = '\0'; // maham \n ot parolata
+    input_username(user_name);
+    input_password(password);
+    input_safe(safe_message);
 
     while ((!check_specials(user_name) && verify_user_name(user_name, type)) || !check_specials(password) || !check_specials(safe_message)){
 
         printf("Invalid input! Try again!\n");
         printf("     Sign in    \n");
-        usual_input(user_name, password, safe_message);
-        printf("  Safe message:\n");
-        fgets(safe_message, 20, stdin); // vzimane na parolata ot potrebitelq
-        safe_message[strlen(safe_message) - 1] = '\0'; // maham \n ot parolata
+        input_username(user_name);
+        input_password(password);
+        input_safe(safe_message);
     }
     if (strcmp(type, "fans") == 0)
     {
