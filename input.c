@@ -93,6 +93,7 @@ enum bool check_date(char* date) // 01.01.2000 eu date system
 
     if (!check_curr(date))
         return false;
+
 }
 
 enum bool verify_safe_message(char* safe_message, char* type, char* user_name) // in file
@@ -220,16 +221,6 @@ input_safe(char *safe)
     safe[strlen(safe) - 1] = '\0'; // maham \n ot safe message
 }
 
-void usual_input(char* user_name, char* password)
-{
-    printf("  User name:\n");
-    fgets(user_name, sizeof(user_name), stdin); // vzimane na user name ot potrebitelq
-    user_name[strlen(user_name) - 1] = '\0'; // maham \n ot user name
-    printf("  Password:\n");
-    fgets(password, sizeof(password), stdin); // vzimane na parolata ot potrebitelq
-    password[strlen(password) - 1] = '\0'; // maham \n ot parolata
-}
-
 char* forgotten_password(char* user_name, char* safe_message, char* type)
 {
     printf("     Forgotten password menu    \n");
@@ -305,8 +296,13 @@ void verify_account(char* user_name, char* password, char* safe_message, char* t
             continue;
         }
     }
-    strcmp(answer, "y") == 0 ? password = forgotten_password(user_name, safe_message, type) : 'n';
 
+    if(strcmp(answer, "y") == 0) 
+    {
+        for(int i = 0; i < strlen(password); ++i)
+            password[i] = '\0';
+        strcat(password, forgotten_password(user_name, safe_message, type));
+    }
     input_username(user_name);
     input_password(password);
 
@@ -334,8 +330,12 @@ void verify_account(char* user_name, char* password, char* safe_message, char* t
                 continue;
             }
         }
-        strcmp(answer, "y") == 0 ? password = forgotten_password(user_name, safe_message, type) : 'n';
-
+        if(strcmp(answer, "y") == 0) 
+        {
+            for(int i = 0; i < strlen(password); ++i)
+                password[i] = '\0';
+            strcat(password, forgotten_password(user_name, safe_message, type));
+        }
         input_username(user_name);
         input_password(password);
     }
@@ -714,7 +714,7 @@ enum bool change_budget(char* user_name, char* budget)
     return true;
 }
 
-enum bool print_ticket(char* artist_name, char* date, char* row, char* user_name, char* price, size_t *seat)
+enum bool print_ticket(char* artist_name, char* date, size_t* row, char* user_name, float* price, size_t *seat)
 {
     char* file_name = file_name_generator(artist_name, "concerts");
     FILE* fan;
@@ -735,9 +735,9 @@ enum bool print_ticket(char* artist_name, char* date, char* row, char* user_name
 
     fprintf(fan, "Artist: %s\n", artist_name);
     fprintf(fan, "Date: %s\n", date);
-    fprintf(fan, "Row: %s\n", row);
+    fprintf(fan, "Row: %d\n", row);
     fprintf(fan, "Seat: %d\n", seat);
-    fprintf(fan, "Price: %s\n", price);
+    fprintf(fan, "Price: %f\n", price);
     fprintf(fan, "////////////////////////////\n");
 
     free(file_name);
@@ -783,6 +783,7 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                 }
 
                 char artist_name[20];
+                char date[11];
 
                 do
                 {
@@ -798,10 +799,20 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
 						break;
                 } while (1);
 
+                printf("Here is the list of available concerts for %s:\n\n", artist_name);
+                if(print_concerts(artist_name) == -1)
+                {
+                    printf("No concerts available!\n");
+                    break;
+                }
+                else{
+                    input_date(date);
+                }
+
                 char answer[3];
 
                 do{
-                    printf("Do you want to see all the available concerts for the artist?\n");
+                    printf("Do you want buy a ticket?\n");
                     printf("Or do you want to see the best ticket for your budget? 1/2 \n");
                     fgets(answer, sizeof(answer), stdin);
                     answer[strlen(answer) - 1] = '\0';
@@ -816,22 +827,14 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
 
                 }while(1);
 
-				char date[11];
                 char row[20];
+                float new_revenue = 0;
+                size_t new_row = 0;
 
                 if(strcmp(answer, "1") == 0)
                 {
-                    printf("Here is the list of available concerts for %s:\n\n", artist_name);
-                    if(print_concerts(artist_name) == -1)
-                    {
-                        printf("No concerts available!\n");
-                        break;
-                    }
-                    else{
-                        input_date(date);
-                    }
 
-                    printf("Here is the list of available rows for %s:\n\n", artist_name);
+                    printf("Here is the list of available rows for the %s concert on the %s:\n\n", artist_name, date);
                     if(print_rows(artist_name, date) == -1)
                     {
                         printf("No rows available!\n");
@@ -856,6 +859,25 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                         }while(1);
                     }
 
+                    size_t new_seat = 0;
+                    float new_price = 0;
+
+                    if(buy_ticket_by_row(artist_name, date, new_row, &new_price, &new_seat) != -1)
+                    {
+                        printf("Ticket bought successfully!\n");
+                        printf("Seat: %d", new_seat);
+                        printf("Price: %f", new_price);
+                        print_ticket(artist_name, date, new_row, user_name, &new_price, new_seat);
+
+                        float new_budget = atof(strbudget);
+                        new_budget -= new_price;
+                        sprintf(strbudget, "%f", new_budget);
+                        change_budget(user_name, strbudget);
+                    }
+                    else
+                    {
+                        printf("Ticket buying failed!\n");
+                    }
                 }
                 else if(strcmp(answer, "2") == 0)
                 {
@@ -873,18 +895,48 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                             printf("You don't have money! Try again!\n");
                             continue;
                         }
-                        float new_revenue = 0;
                         new_revenue = atof(revenue);
                         break;
                     } while (1);
 
-                    // tuk vikam na iva funkciqta koqto shte vurne naj dobroto mqsto za cenata na potrebitelq
-                }
-                size_t seat = 0;
+                    size_t best_row;
+                    size_t best_seat;
+                    float pos_price;
+                    if(offer_ticket(artist_name, date, new_revenue, &best_row, &best_seat, &pos_price) == -1)
+                    {
+                        printf("No tickets available!\n");
+                        break;
+                    }
+                    else
+                    {
+                        printf("Here is the best ticket for your budget:\n");
+                        printf("Row: %d\n", best_row);
+                        printf("Seat: %d\n", best_seat);
+                        printf("Price: %d\n\n", pos_price);
 
-                if(!print_ticket(artist_name, date, row, user_name, revenue, seat))
-                {
-                    printf("Ticket bought successfully!\n");
+                        printf("Do you want to buy this ticket? y/n\n");
+                        char answer[3];
+                        fgets(answer, sizeof(answer), stdin);
+                        answer[strlen(answer) - 1] = '\0';
+                        if(strcmp(answer, "y") == 0)
+                        {
+                            if(buy_ticket(artist_name, date, best_row, user_name, &pos_price, best_seat) != -1)
+                            {
+                                printf("Ticket bought successfully!\n");
+                            }
+                            else
+                            {
+                                printf("Ticket buying failed!\n");
+                            }
+                            print_ticket(artist_name, date, best_row, user_name, &pos_price, best_seat);
+                            float new_budget = atof(strbudget);
+                            new_budget -= pos_price;
+                            sprintf(strbudget, "%f", new_budget);
+                            change_budget(user_name, strbudget);
+                        }
+                        else
+                            break;
+                    }
                 }
 
 				break;
@@ -964,7 +1016,7 @@ void menu()
 
     printf("Welcome to TixMaestro!\n");
 
-    char* type = (char*)malloc(10 * sizeof(char));
+    char* type = NULL;
     printf("Are you an artist or a fan? a/f\n");
     fgets(type, sizeof(type), stdin);
     type[strlen(type) - 1] = '\0';
@@ -995,6 +1047,8 @@ void menu()
     {
         fans_menu(user_name, password, safe_message, budget);
     }
+
+    printf("Thank you for using TixMaestro!\n");
 }
 
 int main()
