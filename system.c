@@ -639,7 +639,7 @@ int delete_concert(const char *artist_name, const char *date)
     strcpy(date_formated, "Date: ");
     strcat(date_formated, date);
 
-    int delete_flag = 0;
+    int delete_flag = 0, concert_end = 0;
     // flag = 1 - nachalo na koncerta, koito triem
     // flag = 2 - kraq na koncerta, koito triem
 
@@ -651,11 +651,15 @@ int delete_concert(const char *artist_name, const char *date)
         }
 
         if (delete_flag == 1 && strncmp(line, "////////////////////////////\n", strlen("////////////////////////////\n")) == 0) {
-            fgets(line, sizeof(line), artist);
             delete_flag = 2;
+            concert_end = 1;
         }
-        if (delete_flag == 0 || delete_flag == 2) {
-            fprintf(temp, "%s", line);
+        if (delete_flag == 0 || delete_flag == 2) {  
+            if(concert_end == 1) {
+                concert_end = 0;
+            } else {
+                fprintf(temp, "%s", line);
+            }
         }
     }  
 
@@ -814,7 +818,6 @@ int print_rows_concert(const char *artist_name, const char *date)
     fclose(artist);
     return 1;
 }
-
 
 int offer_ticket(const char *artist_name, const char *date, float wanted_price, size_t *row, float *possible_price, size_t *seat)
 {
@@ -1026,7 +1029,6 @@ int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, flo
 }
 
 
-
 int main()
 {
     //create_artist("Galena", "piemise", "piq");
@@ -1066,7 +1068,8 @@ int main()
     // buy_ticket_by_row("Galena", "12.10.1023", 3, &price, &seat);
     // printf("price: %f seat: %ld\n", price, seat);
 
-    create_concert(10, 70, "Galena", "10.10.1010", "Sofia - Plaza", 0);
+    //create_concert(10, 70, "Galena", "10.17.1010", "Sofia - Plaza", 0);
+    delete_concert("Galena", "10.10.1010");
     return 0;
 }
 
