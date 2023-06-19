@@ -2,3 +2,5 @@ system
 artists/
 .vscode/
 fans/
+windows.h
+linux.h
