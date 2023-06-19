@@ -1,5 +1,7 @@
 #include "system.h"
 
+#define MAX_LINE_LENGTH 100
+
 char *file_name_generator(const char *name, const char *type)
 {
     char *file_name = malloc(strlen(name) + 11);
@@ -65,10 +67,24 @@ int create_user(const char *name, const char *password, const char *safe_message
     fprintf(artist, "Name: %s\n", name);
     fprintf(artist, "Password: %s\n", password);
     fprintf(artist, "Safe message: %s\n", safe_message);
-    if(type == "fan")
+    if(strcmp(type, "fan") == 0)
     {
         fprintf(artist, "Tickets: \n");
+    } else {
+        FILE *file = fopen("artists/artists_lineup.txt", "r");
+
+        if (file == NULL) {
+            file = fopen("artists/artists_lineup.txt", "w");
+            fprintf(file, "%s\n", name);
+        } else 
+        {
+            file = fopen("artists/artists_lineup.txt", "a");
+            fprintf(file, "%s\n", name);
+        }
+        fclose(file);
+
     }
+    
     fprintf(artist, "////////////////////////////\n");
 
     free(file_name);
@@ -947,34 +963,14 @@ int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, flo
 
 int print_artists_lineup()
 {
-    DIR *dir;
-    struct dirent *ent;
-
-    dir = opendir("artists");
-    if (dir == NULL) {
-        printf("Unable to open directory.\n");
+    FILE *file = fopen("artists/artists_lineup.txt", "r");
+    if (file == NULL) {
         return -1;
     }
-
-    while ((ent = readdir(dir)) != NULL) {
-        char file_path[100];
-        strcpy(file_path, "artists/");
-        strcat(file_path, ent->d_name);
-
-        FILE *file = fopen(file_path, "r");
-        if (file == NULL) {
-            return -1;
-        }
-        char line[100];
-        if (fgets(line, sizeof(line), file) != NULL) {
-            char name[100];
-            snprintf(name, strlen(line) - strlen("Name: ") + 1, "%s", line + strlen("Name: "));
-            printf("%s", name);
-        }
-        fclose(file);
+    char line[100];
+    while(fgets(line, sizeof(line), file)) {
+        printf("%s", line);
     }
-
-    closedir(dir);
     return 1;
 }
 
@@ -1065,18 +1061,21 @@ int main()
 
     //buy_ticket("Galena", "12.10.1023", 2);
 
-    size_t row;
-    float possible_price;
-    size_t seat;
+    // size_t row;
+    // float possible_price;
+    // size_t seat;
 
-    offer_ticket("Galena", "12.10.1023", 10, &row, &possible_price, &seat);
-    //buy_ticket("Galena", "12.10.1023", 2, &possible_price, &seat);
-    printf("row: %ld price: %f seat: %ld\n", row, possible_price, seat);
-    buy_ticket("Galena", "12.10.1023", seat);
+    // offer_ticket("Galena", "12.10.1023", 10, &row, &possible_price, &seat);
+    // //buy_ticket("Galena", "12.10.1023", 2, &possible_price, &seat);
+    // printf("row: %ld price: %f seat: %ld\n", row, possible_price, seat);
+    // buy_ticket("Galena", "12.10.1023", seat);
     
     //print_all_concerts("Galena");
 
     //print_rows_concert("Galena", "12.10.1023");
+
+    create_user("Ivanata", "1234", "grubo mrusno neshto", "artist");
+    print_artists_lineup();
     return 0;
 }
 
