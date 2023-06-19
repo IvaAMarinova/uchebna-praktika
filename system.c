@@ -1,5 +1,6 @@
 #include "system.h"
 #define MAX_LINE_LENGTH 100
+#define MAX_ROWS 18
 
 void generate_tickets(size_t capacity, float revenue, FILE *artist)
 {
@@ -96,7 +97,7 @@ void first_last_of_row(size_t row, size_t *first_seat, size_t *last_seat)
 
 char *file_name_generator(const char *name, const char *type)
 {
-    char *file_name = malloc(strlen(name) + 11);
+    char *file_name = malloc(strlen(name) + strlen(type) + strlen("s/.txt") + 1);
     if (file_name == NULL) {
         return NULL;
     }
@@ -837,7 +838,7 @@ int offer_ticket(const char *artist_name, const char *date, float wanted_price, 
     strcat(date_formated, date);
 
     char line[MAX_LINE_LENGTH];
-    float rows[18]; // 17 rows is max
+    float rows[MAX_ROWS];
     size_t rows_cnt = 0;
 
     while (fgets(line, sizeof(line), artist)) {
@@ -882,7 +883,7 @@ int offer_ticket(const char *artist_name, const char *date, float wanted_price, 
                 fgets(line, sizeof(line), artist);
             }
             for (; curr_seat <= last_seat; curr_seat++) {
-                char seat_str[10];
+                char seat_str[MAX_LINE_LENGTH];
                 sprintf(seat_str, "%zu", curr_seat);
                 strcat(seat_str, " - 0");
                 if (strncmp(line, seat_str, strlen(seat_str)) == 0) {
@@ -1033,7 +1034,7 @@ int main()
 {
     //delete_concert("Ivana", "18.17.1010");
     //create_concert(15, 4500, "Ivana", "20.17.1010", "Sofia - Plaza", 0);
-    edit_location("Ivana", "18.17.1010", "Maika ti");
+    edit_location("Ivana", "18.17.1010", "Bansko");
     return 0;
 }
 

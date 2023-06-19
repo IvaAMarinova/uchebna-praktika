@@ -920,7 +920,7 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                         answer[strlen(answer) - 1] = '\0';
                         if(strcmp(answer, "y") == 0)
                         {
-                            if(buy_ticket(artist_name, date, best_row, user_name, &pos_price, best_seat) != -1)
+                            if(buy_ticket(artist_name, date, best_seat) != -1)
                             {
                                 printf("Ticket bought successfully!\n");
                             }
