@@ -1,8 +1,6 @@
 // user input - main()
 #include "system.h"
 
-void verify_account();// proverka dali potrebitelq e v sistemata
-
 enum bool{ false, true };
 
 enum bool check_specials(char* user_name)
@@ -19,8 +17,6 @@ enum bool check_specials(char* user_name)
     }
     return true;
 }
-
-/*
 
 enum bool check_number(char* number)
 {
@@ -41,7 +37,6 @@ enum bool check_number(char* number)
 	}
     return true;
 }
-*/
 
 enum bool check_curr(char* date) {
     struct tm tm;
@@ -169,8 +164,6 @@ void usual_input(char* user_name, char* password)
     fgets(password, sizeof(password), stdin); // vzimane na parolata ot potrebitelq
     password[strlen(password) - 1] = '\0'; // maham \n ot parolata
 }
-
-
 
 char* forgotten_password(char* user_name, char* safe_message, char* type)
 {
@@ -384,7 +377,8 @@ void edit_concert(char* user_name, char* date, char* location, char* capacity, c
             break;
 
         case 2 :
-        char new_date[11];
+
+            char new_date[11];
             do
             {
                 printf("Enter the new date of the event: \n");
@@ -410,6 +404,7 @@ void edit_concert(char* user_name, char* date, char* location, char* capacity, c
             break;
 
         case 3 :
+        
             do
             {
                 printf("Enter the new capacity of the event: \n");
@@ -535,6 +530,8 @@ void artists_menu(char* user_name, char* password, char* safe_message)
                         break;
                 } while (1);
 
+                size_t new_capacity = 0;
+
                 do
                 {
                     printf("Enter the capacity of the event: \n");
@@ -549,40 +546,32 @@ void artists_menu(char* user_name, char* password, char* safe_message)
 							continue;
 						}
 					}
-                    size_t new_capacity = 0;
                     new_capacity = atoi(capacity);
                     break;
                 } while (1);
                 
+                float new_revenue = 0;
+
                 do
                 {
                     printf("Enter the revenue of the concert: \n");
                     fgets(revenue, 20, stdin);
                     revenue[strlen(revenue) - 1] = '\0';
 
-                    int point = 0;
-                    for (int i = 0; i < strlen(revenue); i++)
+                    if(!check_number(revenue))
                     {
-                        if (revenue[i] < '0' || revenue[i] > '9')
-                        {
-                            printf("Invalid capacity! Try again!\n");
-                            continue;
-                        }
-                        if (revenue[i] == '.')
-                        {
-							point++;
-                            if (point > 1)
-                            {
-								printf("Invalid revenue! Try again!\n");
-								continue;
-							}
-						}
+                        printf("Invalid revenue! Try again!\n");
+                        continue;
                     }
-                    float new_revenue = 0;
-                    new_revenue = atof(revenue);
-                    break;
+                    else
+                    {
+                        new_revenue = atof(revenue);
+                        break;
+                    }
 
                 } while (1);
+
+                int new_state = 0;
 
                 do
                 {
@@ -597,11 +586,12 @@ void artists_menu(char* user_name, char* password, char* safe_message)
 					}
                     else
                     {
-                        int new_state = atoi(state);
+                        new_state = atoi(state);
                         break;
                     }
 
                 } while (1);
+
                 if (create_concert(new_capacity, new_revenue, user_name, date, location, new_state))
                 {
                     printf("Event created successfully!\n");
@@ -694,34 +684,61 @@ void artists_menu(char* user_name, char* password, char* safe_message)
     } while (*choice != '3');
 }
 
-enum bool change_budget(char* budget)
+enum bool change_budget(char* user_name, char* budget)
 {
     char *file_name = file_name_generator(user_name, "fans");
-    FILE* fan = fopen(file_name, "w");
+    FILE* fan = fopen(file_name, "r+");
+    if (fan == NULL)
+    {
+        printf("Error opening file!\n");
+        free(file_name);
+        return false;
+    }
+
+    char line[200];
+    while (fgets(line, sizeof(line), fan))
+    {
+        if (strncmp(line, "Budget: ", 8) == 0)
+        {
+            fseek(fan, -strlen(line), SEEK_CUR);
+            fprintf(fan, "Budget: %s\n", budget);
+            break;
+        }
+    }
+
+    fclose(fan);
+    free(file_name);
+    return true;
+}
+
+enum bool print_ticket(char* artist_name, char* date, char* row, char* user_name, char* price, size_t *seat)
+{
+    char* file_name = file_name_generator(artist_name, "concerts");
+    FILE* fan;
+    if(file_name == NULL)
+    {
+        return false;
+    }
+
+    fan = fopen(file_name, "a");
     if(fan == NULL)
     {
+        printf("Error opening file!\n");
         free(fan);
         return false;
     }
 
-    int flag = 0;
-    char line[200];
-    while(fgets(line, sizeof(line), fan))
-    {
-        if(strncmp(line, "Budget: ", 8) == 0)
-        {
-            flag = 1;
-            break;
-        }
-    }
-    if(flag == 1)
-        {
-            fgets(line, sizeof(line), fan);
-            size_t len = strlen(line);
+    fseek(fan, 1, SEEK_END);
 
-            fseek(fan, -len, SEEK_CUR);
-            fprintf(fan, "Budget: %s\n", budget);
-        }
+    fprintf(fans, "Artist: %s\n", artist_name);
+    fprintf(fans, "Date: %s\n", date);
+    fprintf(fans, "Row: %s\n", row);
+    fprintf(fans, "Seat: %d\n", seat);
+    fprintf(fans, "Price: %s\n", revenue);
+    fprintf(fans, "////////////////////////////\n");
+
+    free(file_name);
+    fclose(fan);
     return true;
 }
 
@@ -730,6 +747,7 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
     printf("Welcome, %s!\n\n", user_name);
 
     int choice;
+    char revenue[20];
 
     do
     {
@@ -775,6 +793,7 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
 					else
 						break;
                 } while (1);
+
                 do{
 
                     char answer[3];
@@ -837,7 +856,7 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                     do
                     {
                         printf("How much money are you willing to spend?\n");
-                        char revenue[20];
+                        
                         fgets(revenue, 20, stdin);
                         revenue[strlen(revenue) - 1] = '\0';
 
@@ -859,6 +878,12 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                     } while (1);
 
                     // tuk vikam na iva funkciqta koqto shte vurne naj dobroto mqsto za cenata na potrebitelq
+                }
+                size_t seat = 0;
+
+                if(!print_ticket(artist_name, date, row, user_name, revenue, seat))
+                {
+                    printf("Ticket bought successfully!\n");
                 }
 
 				break;
@@ -979,6 +1004,5 @@ void menu()
 
 int main()
 {
-
     menu();
 }
