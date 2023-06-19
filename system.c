@@ -6,7 +6,7 @@ void generate_tickets(size_t capacity, float revenue, FILE *artist)
     int rows = (int)(log2(capacity) + 1);
     float *seat_prices = malloc(rows * sizeof(float));
     float seat = 0, prev_seat = 0, sum = 0;
-    size_t middle_seat_index = rows / 2;
+    size_t middle_seat_index = rows / 2 - 1;
 
     // set the prices of the middle row as the minimum
     // price we can possibly give a seat and still hit revenue
@@ -20,7 +20,7 @@ void generate_tickets(size_t capacity, float revenue, FILE *artist)
     
     // we go from middle seat to root seat
     for (int i = middle_seat_index - 1; i >= 0; i--) {
-        seat = prev_seat * (1 + 0.01 * ((float)rows - i) * 2); 
+        seat = prev_seat * (1 + 0.01 * ((float)rows - i)); 
         sum += seat * pow(2, i);
         seat_prices[i] = seat;
         prev_seat = seat;
@@ -29,7 +29,7 @@ void generate_tickets(size_t capacity, float revenue, FILE *artist)
     // we go from middle seat to last seat
     prev_seat = seat_prices[middle_seat_index];
     for (int i = middle_seat_index + 1; i < rows; i++) {
-        seat = prev_seat * (1 - 0.005 * ((float)rows - i) / 2); 
+        seat = prev_seat * (1 - 0.01 * ((float)rows - i) / 2); 
         sum += seat * pow(2, i);
         seat_prices[i] = seat;
         prev_seat = seat;
@@ -1031,46 +1031,9 @@ int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, flo
 
 int main()
 {
-    //create_artist("Galena", "piemise", "piq");
-    // create_concert(10, 70, "Galena", "10.10.1010", "Sofia - Plaza", 0);
-    //create_concert(8, 80, "Galena", "12.10.1010", "Sofia - Eleven", 0);
-
-    //make_concert_public("Galena", "10.10.1010");
-    //edit_location("Galena", "10.10.1010", "garata");
-    //delete_concert("Galena", "10.10.1010");
-    //print_artist_info("Galena");
-    //print_concert_info("Galena", "12.10.1010");
-    //edit_capacity("Galena", "12.10.1010", 10);
-
-    //edit_revenue("Galena", "12.10.1010", 100);
-
-    //print_artists_lineup();
-
-    //buy_ticket("Galena", "12.10.1023", 2);
-
-    // size_t row;
-    // float possible_price;
-    // size_t seat;
-
-    // offer_ticket("Galena", "12.10.1023", 10, &row, &possible_price, &seat);
-    // //buy_ticket("Galena", "12.10.1023", 2, &possible_price, &seat);
-    // printf("row: %ld price: %f seat: %ld\n", row, possible_price, seat);
-    // buy_ticket("Galena", "12.10.1023", seat);
-    
-    //print_all_concerts("Galena");
-
-    //print_rows_concert("Galena", "12.10.1023");
-
-    // create_user("Ivanata", "1234", "grubo mrusno neshto", "artist");
-    // print_artists_lineup();
-    // float price;
-    // size_t seat;
-    // buy_ticket_by_row("Galena", "12.10.1023", 3, &price, &seat);
-    // printf("price: %f seat: %ld\n", price, seat);
-
-    //create_concert(1000, 700000, "Ivana", "18.17.1010", "Sofia - Plaza", 0);
-    delete_concert("Ivana", "18.17.1010");
-    create_concert(150, 30000, "Ivana", "18.17.1010", "Sofia - Plaza", 0);
+    //delete_concert("Ivana", "18.17.1010");
+    //create_concert(15, 4500, "Ivana", "20.17.1010", "Sofia - Plaza", 0);
+    edit_location("Ivana", "18.17.1010", "Maika ti");
     return 0;
 }
 
