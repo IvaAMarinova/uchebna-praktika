@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
+#include "windows.h"
+#include "linux.h"
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h>

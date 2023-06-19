@@ -154,6 +154,52 @@ enum bool verify_user_name(char* user_name, char* type)
         return true;
     }
 }
+void input_location(char *location)
+{
+    do
+    {
+        printf("Enter the location of the concert: \n");
+        fgets(location, sizeof(location), stdin);
+        location[strlen(location) - 1] = '\0';
+        if (!check_specials(location))
+        {
+            printf("Invalid location! Try again!\n");
+            continue;
+        }
+        else
+            break;
+
+    }while(1);
+}
+enum bool input_budget(char* budget)
+{
+    fgets(budget, sizeof(budget), stdin);
+    budget[strlen(budget) - 1] = '\0';
+    if(!check_number(budget))
+    {
+        printf("Invalid budget! Try again!\n");
+        return false;
+    }
+    return true;
+}
+void input_date(char *date)
+{
+    do
+    {
+        printf("Enter the date of the concert: \n");
+        fgets(date, sizeof(date), stdin);
+        getchar();
+        if(!check_date(date))
+        {
+            printf("Invalid date! Try again!\n");
+            continue;
+        }
+        else
+            break;
+    }while(1);
+}
+
+
 
 void usual_input(char* user_name, char* password)
 {
@@ -303,9 +349,7 @@ void create_account(char* user_name, char* password, char* safe_message, char* b
         do
         {
             printf("Enter your budget: \n");
-			fgets(budget, 20, stdin);
-			budget[strlen(budget) - 1] = '\0';
-            if (!check_number(budget))
+            if (!input_budget(budget))
             {
 				printf("Invalid budget! Try again!\n");
 				continue;
@@ -326,6 +370,7 @@ void create_account(char* user_name, char* password, char* safe_message, char* b
 
 void edit_concert(char* user_name, char* date, char* location, char* capacity, char* revenue)
 {
+    char choice[3];
     do
     {
         printf("What do you want to edit?\n");
@@ -335,7 +380,6 @@ void edit_concert(char* user_name, char* date, char* location, char* capacity, c
         printf("4. Revenue\n");
         printf("5. Return\n");
 
-        char choice[3];
         fgets(choice, sizeof(choice), stdin);
         choice[strlen(choice) - 1] = '\0';
 
@@ -352,19 +396,7 @@ void edit_concert(char* user_name, char* date, char* location, char* capacity, c
     switch (atoi(choice))
     {
         case 1 :
-            do
-            {
-                printf("Enter the new location of the event: \n");
-                fgets(location, 20, stdin);
-                location[strlen(location) - 1] = '\0';
-                if (!check_specials(location))
-                {
-                    printf("Invalid location! Try again!\n");
-                    continue;
-                }
-                else
-                    break;
-            } while (1);
+            input_location(location);
 
             if (edit_location(user_name, date, location))
             {
@@ -379,19 +411,7 @@ void edit_concert(char* user_name, char* date, char* location, char* capacity, c
         case 2 :
 
             char new_date[11];
-            do
-            {
-                printf("Enter the new date of the event: \n");
-                fgets(new_date, sizeof(new_date), stdin);
-                getchar();
-                if (!check_date(date))
-                {
-                    printf("Invalid date! Try again!\n");
-                    continue;
-                }
-                else
-                    break;
-            } while (1);
+            input_date(date);
 
             if (edit_date(user_name, date, date))
             {
@@ -404,21 +424,20 @@ void edit_concert(char* user_name, char* date, char* location, char* capacity, c
             break;
 
         case 3 :
-        
+            size_t new_capacity = 0;
             do
             {
                 printf("Enter the new capacity of the event: \n");
                 fgets(capacity, 20, stdin);
                 capacity[strlen(capacity) - 1] = '\0';
 
-                if(!check_number(capacity))
+                if(capacity[0] < '0' || capacity[0] > '9')
                 {
                     printf("Invalid capacity! Try again!\n");
                     continue;
                 }
                 else
                 {
-                    size_t new_capacity = 0;
                     new_capacity = atoi(capacity);
                     break;
                 }
@@ -435,20 +454,16 @@ void edit_concert(char* user_name, char* date, char* location, char* capacity, c
             break;
 
         case 4 :
-             
+            float new_revenue = 0;
             do
             {
                 printf("Enter the new revenue of the event: \n");
-                fgets(revenue, 20, stdin);
-                revenue[strlen(revenue) - 1] = '\0';
-
-                if(!check_number(revenue))
+                if(!input_budget(revenue))
                 {
                     printf("Invalid revenue! Try again!\n");
                     continue;
                 }
                 else{
-                    float new_revenue = 0;
                     new_revenue = atof(revenue);
                     break;
                 }
@@ -498,37 +513,13 @@ void artists_menu(char* user_name, char* password, char* safe_message)
     } while (1);
 
     do {
-        switch (choice)
+        switch (atoi(choice))
         {
             case 1:
 
-                do
-                {
-                    printf("Enter the date of the event: \n");
-                    fgets(date, sizeof(date), stdin);
-                    getchar();
-                    if (!check_date(date))
-                    {
-                        printf("Invalid date! Try again!\n");
-                        continue;
-                    }
-                    else
-                        break;
-                } while (1);
+                input_date(date);
 
-                do
-                {
-                    printf("Enter the location of the event: \n");
-                    fgets(location, 20, stdin);
-                    location[strlen(location) - 1] = '\0';
-                    if (!check_specials(location))
-                    {
-                        printf("Invalid location! Try again!\n");
-                        continue;
-                    }
-                    else
-                        break;
-                } while (1);
+                input_location(location);
 
                 size_t new_capacity = 0;
 
@@ -555,10 +546,7 @@ void artists_menu(char* user_name, char* password, char* safe_message)
                 do
                 {
                     printf("Enter the revenue of the concert: \n");
-                    fgets(revenue, 20, stdin);
-                    revenue[strlen(revenue) - 1] = '\0';
-
-                    if(!check_number(revenue))
+                    if(!input_budget(revenue))
                     {
                         printf("Invalid revenue! Try again!\n");
                         continue;
@@ -606,7 +594,12 @@ void artists_menu(char* user_name, char* password, char* safe_message)
             case 2:
 
                 printf("Here is the list of your concerts:\n\n");
-                // tuk printiram funkciqta koqto shte pokaje vsichki koncerti na artist_name
+                if(print_all_concerts(user_name) == -1)
+                {
+                    printf("No concerts available!\n");
+                    break;
+                }
+                char concert_chice[3];
                 do
                 {
                     printf("You can:\n");
@@ -615,7 +608,6 @@ void artists_menu(char* user_name, char* password, char* safe_message)
                     printf("3. Make a concert public\n");
                     printf("4. Return\n");
 
-                    char concert_chice[3];
                     fgets(concert_chice, sizeof(concert_chice), stdin);
                     concert_chice[strlen(concert_chice) - 1] = '\0';
 
@@ -730,12 +722,12 @@ enum bool print_ticket(char* artist_name, char* date, char* row, char* user_name
 
     fseek(fan, 1, SEEK_END);
 
-    fprintf(fans, "Artist: %s\n", artist_name);
-    fprintf(fans, "Date: %s\n", date);
-    fprintf(fans, "Row: %s\n", row);
-    fprintf(fans, "Seat: %d\n", seat);
-    fprintf(fans, "Price: %s\n", revenue);
-    fprintf(fans, "////////////////////////////\n");
+    fprintf(fan, "Artist: %s\n", artist_name);
+    fprintf(fan, "Date: %s\n", date);
+    fprintf(fan, "Row: %s\n", row);
+    fprintf(fan, "Seat: %d\n", seat);
+    fprintf(fan, "Price: %s\n", price);
+    fprintf(fan, "////////////////////////////\n");
 
     free(file_name);
     fclose(fan);
@@ -746,7 +738,7 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
 {
     printf("Welcome, %s!\n\n", user_name);
 
-    int choice;
+    char choice[3];
     char revenue[20];
 
     do
@@ -755,9 +747,9 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
         printf("1. Buy a ticket\n");
         printf("2. View your account\n");
 
-        scanf("%d", &choice);
-        getchar();
-        if (choice < 1 || choice > 2)
+        fgets(choice, sizeof(choice), stdin);
+        choice[strlen(choice) - 1] = '\0';
+        if (choice[0] != '1' && choice[0] != '2' && choice[1] != '\0')
         {
             printf("Invalid choice! Try again!\n");
             continue;
@@ -769,7 +761,7 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
 
     do {
 
-        switch (choice)
+        switch (atoi(choice))
         {
             case 1:
                 printf("Here is the list of available artists:\n\n");
@@ -779,10 +771,11 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                     break;
                 }
 
+                char artist_name[20];
+
                 do
                 {
                     printf("Enter the name of the artist: \n");
-                    char artist_name[20];
                     fgets(artist_name, 20, stdin);
                     artist_name[strlen(artist_name) - 1] = '\0';
                     if (!check_specials(artist_name) || !verify_user_name(artist_name, "artist"))
@@ -794,10 +787,10 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
 						break;
                 } while (1);
 
-                do{
+                char answer[3];
 
-                    char answer[3];
-                    printf("Do you want to see all the available tickets for the artist?\n");
+                do{
+                    printf("Do you want to see all the available concerts for the artist?\n");
                     printf("Or do you want to see the best ticket for your budget? 1/2 \n");
                     fgets(answer, sizeof(answer), stdin);
                     answer[strlen(answer) - 1] = '\0';
@@ -811,44 +804,46 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                         break;
 
                 }while(1);
-				
+
+				char date[11];
+                char row[20];
 
                 if(strcmp(answer, "1") == 0)
                 {
-                    // tuk vikam funkciqta koqto shte pokaje vsichki bileti za artist_name spored moite kriterii
-                    char date[11];
-                    do
+                    printf("Here is the list of available concerts for %s:\n\n", artist_name);
+                    if(print_concerts(artist_name) == -1)
                     {
-                        printf("Enter the date that you want a ticket for: \n");
-                        fgets(date, sizeof(date), stdin);
-                        getchar();
-                        if (!check_date(date))
-                        {
-                            printf("Invalid date! Try again!\n");
-                            continue;
-                        }
-                        else
-                            break;
-                    } while (1);
+                        printf("No concerts available!\n");
+                        break;
+                    }
+                    else{
+                        input_date(date);
+                    }
 
-                    char row[20];
-
-                    do
+                    printf("Here is the list of available rows for %s:\n\n", artist_name);
+                    if(print_rows(artist_name, date) == -1)
                     {
-                        printf("Enter the row that you want a ticket for: \n");
-                        fgets(row, 20, stdin);
-                        row[strlen(row) - 1] = '\0';
-                        if (!check_number(row))
+                        printf("No rows available!\n");
+                        break;
+                    }
+                    else{
+                        do
                         {
-                            printf("Invalid row! Try again!\n");
-                            continue;
-                        }
-                        else
-                        {
-                            size_t new_row = atoi(row);
-                            break;
-                        }
-                    }while(1);
+                            printf("Enter the row that you want a ticket for: \n");
+                            fgets(row, 20, stdin);
+                            row[strlen(row) - 1] = '\0';
+                            for(int i = 0; i < strlen(row); i++)
+                            {
+                                if(row[i] < '0' || row[i] > '9')
+                                {
+                                    printf("Invalid row! Try again!\n");
+                                    continue;
+                                }
+                                else
+                                    break;
+                            }
+                        }while(1);
+                    }
 
                 }
                 else if(strcmp(answer, "2") == 0)
@@ -857,13 +852,9 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                     {
                         printf("How much money are you willing to spend?\n");
                         
-                        fgets(revenue, 20, stdin);
-                        revenue[strlen(revenue) - 1] = '\0';
-
-                        
-                        if (!check_number(revenue))
+                        if(!input_budget(revenue))
                         {
-                            printf("Invalid capacity! Try again!\n");
+                            printf("Invalid some! Try again!\n");
                             continue;
                         }
                         if (atof(strbudget) < atof(revenue))
@@ -874,7 +865,6 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                         float new_revenue = 0;
                         new_revenue = atof(revenue);
                         break;
-
                     } while (1);
 
                     // tuk vikam na iva funkciqta koqto shte vurne naj dobroto mqsto za cenata na potrebitelq
@@ -887,55 +877,49 @@ void fans_menu(char* user_name, char* password, char* safe_message, char* strbud
                 }
 
 				break;
+
             case 2:
-                    printf("Here is your account information:\n");
-                    printf("Username: %s\n", user_name);
-                    printf("Password: %s\n", password);
-                    printf("Budget: %s\n", strbudget);
+                printf("Here is your account information:\n");
+                printf("Username: %s\n", user_name);
+                printf("Password: %s\n", password);
+                printf("Budget: %s\n", strbudget);
 
-                    printf("Do you want to add to your budget? y/n\n");
-                    char answer[3];
-                    fgets(answer, sizeof(answer), stdin);
-                    answer[strlen(answer) - 1] = '\0';
+                printf("Do you want to add to your budget? y/n\n");
+                char answer[3];
+                fgets(answer, sizeof(answer), stdin);
+                answer[strlen(answer) - 1] = '\0';
 
-                    char temp_budget[20];
+                char temp_budget[20];
 
-                    if (strcmp(answer, "y") == 0)
+                if (strcmp(answer, "y") == 0)
+                {
+                    do
                     {
-                        do
+                        printf("How much money do you want to add?\n");
+                        if(!input_budget(temp_budget))
                         {
-							printf("How much money do you want to add?\n");
-							fgets(temp_budget, 20, stdin);
-							temp_budget[strlen(temp_budget) - 1] = '\0';
+                            printf("Invalid budget! Try again!\n");
+                            continue;
+                        }
 
-                            if (!check_number(temp_budget))
-                            {
-                                printf("Invalid budget! Try again!\n");
-                                continue;
-                            }
-
-							float new_budget = 0, budget = atoi(strbudget);
-							new_budget = atof(temp_budget);
+						float new_budget = 0, budget = atof(strbudget);
+						new_budget = atof(temp_budget);
                             
-                            budget += new_budget;
-                            sprintf(strbudget, "%f", budget);
+                        budget += new_budget;
+                        sprintf(strbudget, "%f", budget);
 
-							break;
-						} while(1);
-
-                        change_budget(strbudget);
-
-					}
-                    else if (strcmp(answer, "n") == 0)
-                    {
 						break;
-					}
-                    else
-                    {
-						printf("Invalid input! Try again!\n");
-						continue;
-					}
+					} while(1);
 
+                    change_budget(user_name, strbudget);
+
+				}
+                else if (strcmp(answer, "n") != 0)
+                {
+					printf("Invalid input! Try again!\n");
+					continue;
+				}
+                    
                 break;
         }
 
