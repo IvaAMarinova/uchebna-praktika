@@ -724,7 +724,7 @@ void first_last_of_row(size_t row, size_t *first_seat, size_t *last_seat)
     *last_seat = pow(2, row) - 1;
 }
 
-float offer_ticket(const char *artist_name, const char *date, float wanted_price, size_t *row, float *possible_price, size_t *seat)
+int offer_ticket(const char *artist_name, const char *date, float wanted_price, size_t *row, float *possible_price, size_t *seat)
 {
     char *file_name = file_name_generator(artist_name, "artist");
     if (file_name == NULL) {
@@ -759,9 +759,12 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
                             rows[rows_cnt] = atof(line + len + 1);
                         }
                     }
+                    break;
                 }
             }
+             break;
         }
+       
     }
 
     // all prices
@@ -780,28 +783,34 @@ float offer_ticket(const char *artist_name, const char *date, float wanted_price
         return rows[0];
     }
 
+    fgets(line, sizeof(line), artist);
+    fgets(line, sizeof(line), artist);
     for (size_t i = 0; i < rows_cnt - 1; i++) {
-        if (wanted_price <= rows[i] && wanted_price >= rows[i + 1]) {
+        if (wanted_price < rows[i] && wanted_price >= rows[i + 1]) {
             size_t first_seat, last_seat, curr_seat;
-            first_last_of_row(i + 1, &first_seat, &last_seat);
-            for (curr_seat = first_seat; curr_seat <= last_seat; curr_seat++) {
-                char seat[10];
-                sprintf(seat, "%zu", curr_seat);
-                strcat(seat, " - 0");
-                printf("%s\n", seat);
-                if (strncmp(line, seat, strlen(seat)) == 0) {
-                    *row = i + 1;
-                    *possible_price = rows[i];
+            first_last_of_row(i + 2, &first_seat, &last_seat);
+            for(curr_seat = 1; curr_seat != first_seat; curr_seat++)
+            {
+                fgets(line, sizeof(line), artist);
+            }
+            for (; curr_seat <= last_seat; curr_seat++) {
+                char seat_str[10];
+                sprintf(seat_str, "%zu", curr_seat);
+                strcat(seat_str, " - 0");
+                printf("%s\n", seat_str);
+                if (strncmp(line, seat_str, strlen(seat_str)) == 0) {
+                    *row = i + 2;
+                    *possible_price = rows[i + 1];
                     *seat = curr_seat;
                     fclose(artist);
                     free(file_name);
                     free(date_formated);
                     return 1;
                 }
+                fgets(line, sizeof(line), artist);
             }
         }
     }
-    printf("not found\n");
     // concert wasn't found
     fclose(artist);
     free(file_name);
@@ -1012,17 +1021,17 @@ int main()
 
     //buy_ticket("Galena", "12.10.1023", 2);
 
-    //size_t row;
-    //float possible_price;
-    //size_t seat;
+    size_t row;
+    float possible_price;
+    size_t seat;
 
-    //offer_ticket("Galena", "12.10.1023", 10, &row, &possible_price, &seat);
+    offer_ticket("Galena", "12.10.1023", 10, &row, &possible_price, &seat);
     //buy_ticket("Galena", "12.10.1023", 2, &possible_price, &seat);
-    //printf("row: %d price: %f seat: %ld\n", 2, possible_price, seat);
+    printf("row: %ld price: %f seat: %ld\n", row, possible_price, seat);
     
     //print_all_concerts("Galena");
 
-    print_rows_concert("Galena", "12.10.1023");
+    //print_rows_concert("Galena", "12.10.1023");
     return 0;
 }
 
