@@ -820,7 +820,46 @@ int offer_ticket(const char *artist_name, const char *date, float wanted_price, 
 
 int buy_ticket(const char *artist_name, const char *date, size_t seat)
 {
-    
+    char *file_name = file_name_generator(artist_name, "artist");
+    if (file_name == NULL) {
+        return -1;
+    }
+
+    FILE *artist = fopen(file_name, "r+");
+    if (artist == NULL) {
+        free(file_name);
+        return -1;
+    }
+
+    char *date_formated = malloc(strlen(date) + strlen("Date: ") + 1);
+    strcpy(date_formated, "Date: ");
+    strcat(date_formated, date);
+
+    char line[100];
+    while (fgets(line, sizeof(line), artist)) {
+        if (strncmp(line, date_formated, strlen(date_formated)) == 0) {
+            printf("found\n");
+            while(fgets(line, sizeof(line), artist))
+            {
+                char seat_str[11];
+                sprintf(seat_str, "%zu - 0", seat);
+                if(strncmp(line, seat_str, strlen(seat_str)) == 0)
+                {
+                    fseek(artist, -2, SEEK_CUR);
+                    fprintf(artist, "1");
+                    fclose(artist);
+                    free(file_name);
+                    free(date_formated);
+                    return 1;
+                }
+            }
+        }
+    }
+
+    fclose(artist);
+    free(file_name);
+    free(date_formated);
+    return -1;
 }
 
 int buy_ticket_by_row(const char *artist_name, const char *date, size_t row, float *price, size_t *seat)
@@ -1033,6 +1072,7 @@ int main()
     offer_ticket("Galena", "12.10.1023", 10, &row, &possible_price, &seat);
     //buy_ticket("Galena", "12.10.1023", 2, &possible_price, &seat);
     printf("row: %ld price: %f seat: %ld\n", row, possible_price, seat);
+    buy_ticket("Galena", "12.10.1023", seat);
     
     //print_all_concerts("Galena");
 
